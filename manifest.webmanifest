@@ -1,0 +1,19 @@
+{
+  "name": "LOOK",
+  "short_name": "LOOK",
+  "description": "Face mocap attractiveness rating from 1 to 10 — on device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07110f",
+  "theme_color": "#07110f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
