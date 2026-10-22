@@ -48,7 +48,8 @@
 
     body { position: relative; }
     body.mode-scan { overflow: hidden; height: 100dvh; }
-    body.mode-home { overflow-x: hidden; overflow-y: auto; }
+    body.mode-home,
+    body.mode-results { overflow-x: hidden; overflow-y: auto; }
 
     .atmosphere {
       position: fixed;
@@ -190,6 +191,165 @@
       color: rgba(232, 245, 239, 0.62);
       line-height: 1.45;
       margin: 0 0 12px;
+    }
+
+    /* —— Results —— */
+    #results {
+      padding:
+        calc(14px + var(--safe-t))
+        calc(18px + var(--safe-r))
+        calc(36px + var(--safe-b))
+        calc(18px + var(--safe-l));
+      max-width: 40rem;
+      margin: 0 auto;
+    }
+
+    .results-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .results-bar .brand { font-size: clamp(1.8rem, 7vw, 2.6rem); }
+
+    .results-hero {
+      text-align: center;
+      padding: 8px 0 20px;
+      animation: brandIn 0.7s var(--ease) both;
+    }
+
+    .results-hero .score-label {
+      margin: 0 0 4px;
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(232, 245, 239, 0.55);
+    }
+
+    .results-hero .score-value {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(4.5rem, 20vw, 7rem);
+      letter-spacing: -0.06em;
+      line-height: 0.85;
+      margin: 0;
+      color: var(--mint);
+      text-shadow: 0 0 40px rgba(94, 240, 168, 0.35);
+    }
+
+    .results-hero .score-meta {
+      margin: 12px 0 0;
+      color: rgba(232, 245, 239, 0.7);
+    }
+
+    .results-bars {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .graph-block {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      animation: brandIn 0.85s var(--ease) 0.06s both;
+    }
+
+    .graph-block h2 {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.25rem, 4vw, 1.55rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 6px;
+    }
+
+    .graph-block > p {
+      margin: 0 0 14px;
+      color: rgba(232, 245, 239, 0.62);
+      line-height: 1.4;
+      font-size: 0.92rem;
+    }
+
+    .period-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .period-tabs button {
+      min-height: 40px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      background: transparent;
+      color: var(--foam);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .period-tabs button[aria-selected="true"] {
+      background: var(--mint);
+      color: #042016;
+      box-shadow: none;
+    }
+
+    .graph-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      max-height: 240px;
+      background: rgba(13, 28, 24, 0.65);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .graph-wrap canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .graph-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: rgba(232, 245, 239, 0.55);
+    }
+
+    .graph-legend i {
+      display: inline-block;
+      width: 18px;
+      height: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+      background: var(--mint);
+    }
+
+    .graph-legend i.base {
+      background: rgba(232, 245, 239, 0.35);
+    }
+
+    .delta-callout {
+      margin: 14px 0 0;
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .delta-callout em {
+      font-style: normal;
+      color: var(--mint);
+    }
+
+    .delta-note {
+      margin: 6px 0 0;
+      font-size: 0.8rem;
+      color: rgba(232, 245, 239, 0.45);
+      line-height: 1.4;
     }
 
     button {
@@ -581,12 +741,12 @@
   <main id="home" class="view" aria-label="Home">
     <div class="home-hero">
       <h1 class="brand">LOOK</h1>
-      <p class="home-lead">Scan once — LOOK builds a tip list and weekly routine from <em>your</em> symmetry, proportion, and harmony read.</p>
+      <p class="home-lead">Scan → score → see how far you could climb over weeks → get a plan built for your face read.</p>
       <div class="home-cta">
         <button type="button" id="goScanBtn">Scan my face</button>
-        <button type="button" class="ghost" id="goTipsBtn">My plan</button>
+        <button type="button" class="ghost" id="goTipsBtn">Last results</button>
       </div>
-      <p class="build-stamp" id="buildStamp">Build 2026-10-22 · personalized plan</p>
+      <p class="build-stamp" id="buildStamp">Build 2026-10-22 · score · graph · plan</p>
     </div>
 
     <section class="section" id="tips" aria-labelledby="tips-title">
@@ -665,10 +825,62 @@
       <p id="status">Ready when you are.</p>
       <div class="actions">
         <button type="button" class="ghost" id="flipBtn" disabled>Flip</button>
-        <button type="button" class="ghost" id="holdBtn" disabled>Hold score</button>
-        <button type="button" id="tipsFromScanBtn" disabled>My tips</button>
+        <button type="button" id="lockScoreBtn" disabled>Lock score</button>
       </div>
     </footer>
+  </div>
+
+  <div id="results" class="view" hidden aria-label="Results">
+    <div class="results-bar">
+      <button type="button" class="ghost back-btn" id="resultsBackBtn">← Back</button>
+      <h1 class="brand">LOOK</h1>
+    </div>
+
+    <div class="results-hero">
+      <p class="score-label">Your score</p>
+      <p class="score-value" id="resultsScore">—</p>
+      <p class="score-meta" id="resultsMeta">From your face scan</p>
+      <div class="results-bars" aria-hidden="true">
+        <div class="bar"><span>Symmetry</span><i id="resBarSym"></i></div>
+        <div class="bar"><span>Proportion</span><i id="resBarProp"></i></div>
+        <div class="bar"><span>Harmony</span><i id="resBarHarm"></i></div>
+      </div>
+    </div>
+
+    <section class="graph-block" aria-labelledby="graph-title">
+      <h2 id="graph-title">Projected improvement</h2>
+      <p>If you follow your personalized routine, here’s a modeled climb from today’s read. Estimates assume sleep, grooming, expression, skin care, and training — not surgery or filters.</p>
+      <div class="period-tabs" role="tablist" aria-label="Time period">
+        <button type="button" data-weeks="2" aria-selected="false">2 weeks</button>
+        <button type="button" data-weeks="4" aria-selected="true">4 weeks</button>
+        <button type="button" data-weeks="12" aria-selected="false">12 weeks</button>
+      </div>
+      <div class="graph-wrap">
+        <canvas id="improveChart" width="640" height="400" aria-label="Score over time chart"></canvas>
+      </div>
+      <div class="graph-legend">
+        <span><i class="base"></i>Hold steady</span>
+        <span><i></i>With your plan</span>
+      </div>
+      <p class="delta-callout" id="deltaCallout">Potential: <em>—</em></p>
+      <p class="delta-note" id="deltaNote">Model estimate from your weakest bars — not a guarantee.</p>
+    </section>
+
+    <section class="section" id="resultsTips" aria-labelledby="results-tips-title">
+      <h2 id="results-tips-title">Your tips</h2>
+      <div id="resultsTipList"></div>
+    </section>
+
+    <section class="section" id="resultsRoutine" aria-labelledby="results-routine-title">
+      <h2 id="results-routine-title">Your routine</h2>
+      <p id="resultsRoutineLead">Follow this to chase the curve above.</p>
+      <ol class="routine" id="resultsRoutineList"></ol>
+      <p class="disclaimer">Projections are illustrative models from landmark scores. They are not medical predictions. Re-scan in the same light to track real change.</p>
+      <div class="home-cta" style="margin-top:18px">
+        <button type="button" id="rescanBtn">Scan again</button>
+        <button type="button" class="ghost" id="resultsHomeBtn">Home</button>
+      </div>
+    </section>
   </div>
 
   <script type="module">
@@ -697,16 +909,31 @@
 
     const home = document.getElementById("home");
     const scan = document.getElementById("scan");
+    const results = document.getElementById("results");
     const goScanBtn = document.getElementById("goScanBtn");
     const goTipsBtn = document.getElementById("goTipsBtn");
     const backBtn = document.getElementById("backBtn");
-    const tipsFromScanBtn = document.getElementById("tipsFromScanBtn");
+    const lockScoreBtn = document.getElementById("lockScoreBtn");
+    const resultsBackBtn = document.getElementById("resultsBackBtn");
+    const rescanBtn = document.getElementById("rescanBtn");
+    const resultsHomeBtn = document.getElementById("resultsHomeBtn");
     const personalBanner = document.getElementById("personalBanner");
     const personalTips = document.getElementById("personalTips");
     const personalRoutine = document.getElementById("personalRoutine");
     const routineLead = document.getElementById("routineLead");
     const focusChips = document.getElementById("focusChips");
-    const PLAN_KEY = "look.personalPlan.v1";
+    const resultsScore = document.getElementById("resultsScore");
+    const resultsMeta = document.getElementById("resultsMeta");
+    const resultsTipList = document.getElementById("resultsTipList");
+    const resultsRoutineList = document.getElementById("resultsRoutineList");
+    const resultsRoutineLead = document.getElementById("resultsRoutineLead");
+    const improveChart = document.getElementById("improveChart");
+    const deltaCallout = document.getElementById("deltaCallout");
+    const deltaNote = document.getElementById("deltaNote");
+    const resBarSym = document.getElementById("resBarSym");
+    const resBarProp = document.getElementById("resBarProp");
+    const resBarHarm = document.getElementById("resBarHarm");
+    const PLAN_KEY = "look.personalPlan.v2";
 
     const video = document.getElementById("cam");
     const canvas = document.getElementById("mesh");
@@ -720,7 +947,6 @@
     const demoBtn = document.getElementById("demoBtn");
     const demoImg = document.getElementById("demoImg");
     const flipBtn = document.getElementById("flipBtn");
-    const holdBtn = document.getElementById("holdBtn");
     const barSym = document.getElementById("barSym");
     const barProp = document.getElementById("barProp");
     const barHarm = document.getElementById("barHarm");
@@ -736,6 +962,8 @@
     let mode = "live";
     let runningMode = "VIDEO";
     let view = "home";
+    let chartWeeks = 4;
+    let activePlan = null;
 
     const TIP_BANK = {
       sleep: {
@@ -828,10 +1056,8 @@
 
       if (sym < 0.62) pushFocus("Symmetry", "sleep", true);
       else pushFocus("Symmetry", null, false);
-
       if (prop < 0.58) pushFocus("Proportion", "fitness", true);
       else pushFocus("Proportion", null, false);
-
       if (harm < 0.58 || smile < 0.25) pushFocus("Harmony", "smile", true);
       else pushFocus("Harmony", null, false);
 
@@ -841,7 +1067,6 @@
       if (score < 6.5) tipIds.push("skin", "sleep");
       if (score >= 7.5 && tipIds.length < 2) tipIds.push("maintain", "skin");
 
-      // Dedupe preserving order
       const seen = {};
       const ordered = [];
       tipIds.forEach((id) => {
@@ -860,7 +1085,6 @@
       }
 
       const tips = ordered.slice(0, 4).map((id) => TIP_BANK[id]);
-
       const routine = [];
       const weakSym = sym < 0.62;
       const weakProp = prop < 0.58;
@@ -903,10 +1127,20 @@
       });
 
       let summary =
-        "We ranked habits by your weakest bars. Stick to the routine for a week, then scan again in the same light.";
-      if (score >= 8) summary = "Strong baseline — your plan focuses on protecting sleep, skin, and grooming consistency.";
-      else if (weakHarm && !weakSym && !weakProp) summary = "Geometry is decent; expression and polish will move your score fastest.";
-      else if (weakSym && weakProp) summary = "Recovery + framing + body composition are your top levers this week.";
+        "We ranked habits by your weakest bars. Stick to the routine, then re-scan in the same light.";
+      if (score >= 8) summary = "Strong baseline — your plan protects sleep, skin, and grooming so the curve stays high.";
+      else if (weakHarm && !weakSym && !weakProp) summary = "Geometry is decent; expression and polish move your score fastest.";
+      else if (weakSym && weakProp) summary = "Recovery + framing + body composition are your top levers.";
+
+      // Controllable headroom (honest caps — not surgery/filters)
+      const fast =
+        (weakHarm || smile < 0.3 ? 0.45 : 0.15) +
+        (weakSym ? 0.25 : 0.08) +
+        0.15; // grooming / lighting
+      const mid = (score < 7 ? 0.35 : 0.18) + (weakSym ? 0.12 : 0.05); // sleep + skin
+      const slow = weakProp ? 0.55 : 0.2; // fitness / adiposity
+      const totalLift = Math.min(2.2, Math.max(0.35, fast + mid + slow) * (score >= 8.5 ? 0.55 : 1));
+      const target = clamp(score + totalLift, score, 9.7);
 
       return {
         score,
@@ -919,40 +1153,126 @@
         tips,
         routine,
         summary,
+        lift: { fast, mid, slow, total: totalLift, target },
         at: Date.now()
       };
     }
 
-    function renderPlan(plan) {
-      if (!plan) {
-        personalBanner.innerHTML =
-          '<p class="empty-plan" id="planEmpty">No scan yet. Hit <strong>Scan my face</strong>, then <strong>My tips</strong> on the scan screen — we’ll rank habits by what your landmarks need most.</p>';
-        personalTips.innerHTML = "";
-        personalRoutine.innerHTML = "";
-        focusChips.hidden = true;
-        focusChips.innerHTML = "";
-        routineLead.textContent = "After a scan, this becomes a 7-day checklist tuned to your weakest scores.";
-        return;
+    /** Series of weekly scores for baseline + with-plan curves */
+    function projectionSeries(plan, weeks) {
+      const start = plan.score;
+      const target = plan.lift.target;
+      const room = target - start;
+      const baseline = [];
+      const improved = [];
+      for (let w = 0; w <= weeks; w++) {
+        baseline.push(start);
+        // Ease-out: fast early (smile/sleep/groom), slower later (fitness)
+        const t = w / weeks;
+        const eased = 1 - Math.pow(1 - t, 1.65);
+        // Front-load ~55% of lift in first third of the window
+        const front = Math.min(1, t / 0.34);
+        const mix = eased * 0.55 + front * 0.45;
+        improved.push(clamp(start + room * mix, start, target));
+      }
+      return { baseline, improved, weeks };
+    }
+
+    function paintResBars(sym, prop, harm) {
+      const apply = (el, v) => {
+        el.replaceChildren();
+        const fill = document.createElement("b");
+        fill.style.cssText =
+          "display:block;height:100%;width:" +
+          (v * 100).toFixed(1) +
+          "%;background:linear-gradient(90deg, rgba(94,240,168,0.55), #5ef0a8)";
+        el.appendChild(fill);
+      };
+      apply(resBarSym, sym);
+      apply(resBarProp, prop);
+      apply(resBarHarm, harm);
+    }
+
+    function drawImproveChart(plan, weeks) {
+      const canvasEl = improveChart;
+      const rect = canvasEl.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(280, Math.round(rect.width * dpr));
+      const h = Math.max(160, Math.round(rect.height * dpr));
+      canvasEl.width = w;
+      canvasEl.height = h;
+      const g = canvasEl.getContext("2d");
+      const pad = { l: 36 * dpr, r: 16 * dpr, t: 16 * dpr, b: 28 * dpr };
+      const series = projectionSeries(plan, weeks);
+      const minY = Math.max(1, Math.floor(plan.score) - 1);
+      const maxY = Math.min(10, Math.ceil(plan.lift.target) + 0.5);
+      const plotW = w - pad.l - pad.r;
+      const plotH = h - pad.t - pad.b;
+
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = "rgba(232,245,239,0.08)";
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + (plotH * i) / 4;
+        g.fillRect(pad.l, y, plotW, 1 * dpr);
       }
 
-      const rounded = (Math.round(plan.score * 10) / 10).toFixed(1);
-      personalBanner.innerHTML =
-        '<p class="score-line">Last read <em>' +
-        rounded +
-        "</em> · " +
-        (plan.label || "Your look") +
-        "</p><p>" +
-        plan.summary +
-        "</p>";
+      g.fillStyle = "rgba(232,245,239,0.45)";
+      g.font = 11 * dpr + "px Figtree, sans-serif";
+      g.textAlign = "right";
+      g.fillText(maxY.toFixed(1), pad.l - 6 * dpr, pad.t + 4 * dpr);
+      g.fillText(minY.toFixed(1), pad.l - 6 * dpr, pad.t + plotH);
+      g.textAlign = "center";
+      g.fillText("Now", pad.l, h - 8 * dpr);
+      g.fillText("Week " + weeks, pad.l + plotW, h - 8 * dpr);
 
-      focusChips.hidden = false;
-      focusChips.innerHTML = plan.focuses
-        .map(function (f) {
-          return '<span class="' + (f.weak ? "" : "dim") + '">' + f.label + (f.weak ? " focus" : " ok") + "</span>";
-        })
-        .join("");
+      function xAt(i) {
+        return pad.l + (plotW * i) / weeks;
+      }
+      function yAt(v) {
+        return pad.t + plotH * (1 - (v - minY) / (maxY - minY));
+      }
 
-      personalTips.innerHTML = plan.tips
+      function strokeSeries(arr, color, width) {
+        g.strokeStyle = color;
+        g.lineWidth = width;
+        g.lineJoin = "round";
+        g.beginPath();
+        arr.forEach((v, i) => {
+          const x = xAt(i);
+          const y = yAt(v);
+          if (i === 0) g.moveTo(x, y);
+          else g.lineTo(x, y);
+        });
+        g.stroke();
+      }
+
+      strokeSeries(series.baseline, "rgba(232,245,239,0.35)", 2 * dpr);
+      strokeSeries(series.improved, "#5ef0a8", 3 * dpr);
+
+      // End dot
+      const last = series.improved[series.improved.length - 1];
+      g.fillStyle = "#5ef0a8";
+      g.beginPath();
+      g.arc(xAt(weeks), yAt(last), 5 * dpr, 0, Math.PI * 2);
+      g.fill();
+
+      const delta = last - plan.score;
+      deltaCallout.innerHTML =
+        "In " +
+        weeks +
+        " weeks: <em>" +
+        plan.score.toFixed(1) +
+        " → " +
+        last.toFixed(1) +
+        "</em> (+" +
+        delta.toFixed(1) +
+        ")";
+      deltaNote.textContent =
+        "Modeled from your gaps — smile/sleep/grooming early, skin mid-way, fitness later. Re-scan to measure the real curve.";
+    }
+
+    function renderTipsInto(el, plan) {
+      el.innerHTML = plan.tips
         .map(function (t, i) {
           return (
             '<article class="tip' +
@@ -967,39 +1287,74 @@
           );
         })
         .join("");
+    }
 
-      routineLead.textContent =
-        "Built from your bars — Symmetry " +
-        Math.round(plan.sym * 100) +
-        "%, Proportion " +
-        Math.round(plan.prop * 100) +
-        "%, Harmony " +
-        Math.round(plan.harm * 100) +
-        "%.";
-
-      personalRoutine.innerHTML = plan.routine
+    function renderRoutineInto(el, plan) {
+      el.innerHTML = plan.routine
         .map(function (step) {
           return "<li><strong>" + step.title + "</strong><span>" + step.detail + "</span></li>";
         })
         .join("");
     }
 
-    function capturePlanFromScan() {
-      const src = holdScore && held ? held : held || {
-        score: smooth.score,
-        sym: smooth.sym,
-        prop: smooth.prop,
-        harm: smooth.harm,
-        smile: smooth.smile,
-        label: scoreMeta.textContent
-      };
-      if (!src || !src.score || scorePanel.hidden) {
-        setStatus("Get a face score first, then tap My tips.", "warn");
-        return null;
+    function renderPlan(plan) {
+      if (!plan) {
+        personalBanner.innerHTML =
+          '<p class="empty-plan">No scan yet. Tap <strong>Scan my face</strong>, lock your score, then see your graph and plan.</p>';
+        personalTips.innerHTML = "";
+        personalRoutine.innerHTML = "";
+        focusChips.hidden = true;
+        focusChips.innerHTML = "";
+        routineLead.textContent = "After a scan, this becomes a checklist tuned to your weakest scores.";
+        return;
       }
-      const plan = buildPersonalPlan(src);
-      savePlan(plan);
-      return plan;
+
+      const rounded = (Math.round(plan.score * 10) / 10).toFixed(1);
+      const target = plan.lift.target.toFixed(1);
+      personalBanner.innerHTML =
+        '<p class="score-line">Last score <em>' +
+        rounded +
+        "</em> · plan targets <em>" +
+        target +
+        "</em></p><p>" +
+        plan.summary +
+        ' <button type="button" class="ghost" id="openLastResults" style="margin-top:10px;min-height:40px;padding:8px 12px;font-size:0.85rem">Open full results</button></p>';
+
+      focusChips.hidden = false;
+      focusChips.innerHTML = plan.focuses
+        .map(function (f) {
+          return '<span class="' + (f.weak ? "" : "dim") + '">' + f.label + (f.weak ? " focus" : " ok") + "</span>";
+        })
+        .join("");
+
+      renderTipsInto(personalTips, plan);
+      routineLead.textContent =
+        "Symmetry " +
+        Math.round(plan.sym * 100) +
+        "% · Proportion " +
+        Math.round(plan.prop * 100) +
+        "% · Harmony " +
+        Math.round(plan.harm * 100) +
+        "%";
+      renderRoutineInto(personalRoutine, plan);
+
+      const openBtn = document.getElementById("openLastResults");
+      if (openBtn) openBtn.addEventListener("click", () => showResults(plan));
+    }
+
+    function fillResults(plan) {
+      activePlan = plan;
+      resultsScore.textContent = (Math.round(plan.score * 10) / 10).toFixed(1);
+      resultsMeta.textContent = (plan.label || "Your look") + " · locked from scan";
+      paintResBars(plan.sym, plan.prop, plan.harm);
+      renderTipsInto(resultsTipList, plan);
+      resultsRoutineLead.textContent =
+        "Follow this to chase the +" + plan.lift.total.toFixed(1) + " modeled lift.";
+      renderRoutineInto(resultsRoutineList, plan);
+      document.querySelectorAll(".period-tabs button").forEach((btn) => {
+        btn.setAttribute("aria-selected", String(Number(btn.dataset.weeks) === chartWeeks));
+      });
+      requestAnimationFrame(() => drawImproveChart(plan, chartWeeks));
     }
 
     function showHome(opts) {
@@ -1008,10 +1363,8 @@
       raf = 0;
       stopCamera();
       holdScore = false;
-      holdBtn.textContent = "Hold score";
-      holdBtn.disabled = true;
       flipBtn.disabled = true;
-      tipsFromScanBtn.disabled = true;
+      lockScoreBtn.disabled = true;
       scorePanel.hidden = true;
       gate.hidden = false;
       demoImg.hidden = true;
@@ -1020,7 +1373,8 @@
       setStatus("Ready when you are.");
       home.hidden = false;
       scan.hidden = true;
-      document.body.classList.remove("mode-scan");
+      results.hidden = true;
+      document.body.classList.remove("mode-scan", "mode-results");
       document.body.classList.add("mode-home");
       history.replaceState({ view: "home" }, "", "#home");
       renderPlan(loadPlan());
@@ -1035,27 +1389,82 @@
       view = "scan";
       home.hidden = true;
       scan.hidden = false;
-      document.body.classList.remove("mode-home");
+      results.hidden = true;
+      document.body.classList.remove("mode-home", "mode-results");
       document.body.classList.add("mode-scan");
       history.replaceState({ view: "scan" }, "", "#scan");
-      setStatus("Allow the camera or try the sample face.");
+      setStatus("Allow the camera, center your face, then Lock score.");
+    }
+
+    function showResults(plan) {
+      if (!plan) {
+        plan = loadPlan();
+      }
+      if (!plan) {
+        showScan();
+        setStatus("Scan first to unlock results.", "warn");
+        return;
+      }
+      view = "results";
+      cancelAnimationFrame(raf);
+      raf = 0;
+      stopCamera();
+      home.hidden = true;
+      scan.hidden = true;
+      results.hidden = false;
+      document.body.classList.remove("mode-home", "mode-scan");
+      document.body.classList.add("mode-results");
+      history.replaceState({ view: "results" }, "", "#results");
+      fillResults(plan);
+      window.scrollTo(0, 0);
+    }
+
+    function lockAndShowResults() {
+      const src =
+        held || {
+          score: smooth.score,
+          sym: smooth.sym,
+          prop: smooth.prop,
+          harm: smooth.harm,
+          smile: smooth.smile,
+          label: scoreMeta.textContent
+        };
+      if (!src || !src.score || scorePanel.hidden) {
+        setStatus("Keep your face in frame until a score appears, then Lock score.", "warn");
+        return;
+      }
+      holdScore = true;
+      held = { ...src };
+      const plan = buildPersonalPlan(src);
+      savePlan(plan);
+      showResults(plan);
     }
 
     goScanBtn.addEventListener("click", showScan);
     goTipsBtn.addEventListener("click", () => {
-      showHome({ scrollToPlan: true });
+      const plan = loadPlan();
+      if (plan) showResults(plan);
+      else showHome({ scrollToPlan: true });
     });
     backBtn.addEventListener("click", () => showHome());
-    tipsFromScanBtn.addEventListener("click", () => {
-      if (!holdScore && held) {
-        holdScore = true;
-        holdBtn.textContent = "Resume";
-      }
-      const plan = capturePlanFromScan();
-      if (plan) showHome({ scrollToPlan: true });
+    resultsBackBtn.addEventListener("click", () => showHome());
+    resultsHomeBtn.addEventListener("click", () => showHome());
+    rescanBtn.addEventListener("click", showScan);
+    lockScoreBtn.addEventListener("click", lockAndShowResults);
+
+    document.querySelectorAll(".period-tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        chartWeeks = Number(btn.dataset.weeks) || 4;
+        document.querySelectorAll(".period-tabs button").forEach((b) => {
+          b.setAttribute("aria-selected", String(b === btn));
+        });
+        if (activePlan) drawImproveChart(activePlan, chartWeeks);
+      });
     });
+
     window.addEventListener("popstate", () => {
       if (location.hash === "#scan") showScan();
+      else if (location.hash === "#results") showResults(loadPlan());
       else showHome();
     });
 
@@ -1191,7 +1600,7 @@
       scorePanel.hidden = false;
       scoreValue.classList.toggle("is-hot", rounded >= 8);
       paintBars(display.sym, display.prop, display.harm);
-      tipsFromScanBtn.disabled = false;
+      lockScoreBtn.disabled = false;
     }
 
     function resizeCanvas(w, h) {
@@ -1326,9 +1735,8 @@
       await video.play();
       gate.hidden = true;
       flipBtn.disabled = false;
-      holdBtn.disabled = false;
-      tipsFromScanBtn.disabled = true;
-      setStatus("Face the camera — scoring live face mocap.");
+      lockScoreBtn.disabled = true;
+      setStatus("Face the camera — when the score settles, tap Lock score.");
     }
 
     function loop() {
@@ -1374,7 +1782,6 @@
         const faces = result.faceLandmarks || [];
         gate.hidden = true;
         flipBtn.disabled = true;
-        holdBtn.disabled = false;
         if (!faces.length) {
           setStatus("Sample loaded, but no face was found.", "warn");
           return;
@@ -1433,14 +1840,10 @@
       facingMode = facingMode === "user" ? "environment" : "user";
       try { await startCamera(); } catch (_) { facingMode = "user"; }
     });
-    holdBtn.addEventListener("click", () => {
-      holdScore = !holdScore;
-      holdBtn.textContent = holdScore ? "Resume" : "Hold score";
-      if (holdScore && held) showScore(held);
-      setStatus(holdScore ? "Score held." : "Live scoring.");
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      if (view === "results" && activePlan) drawImproveChart(activePlan, chartWeeks);
     });
-
-    window.addEventListener("resize", () => resizeCanvas());
     window.addEventListener("orientationchange", () => setTimeout(() => resizeCanvas(), 250));
     window.addEventListener("error", (e) => setStatus(e.message || "Something went wrong.", "warn"));
     window.addEventListener("unhandledrejection", (e) => {
@@ -1453,13 +1856,14 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=4")
+        .register("./sw.js?v=5")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
 
     renderPlan(loadPlan());
     if (location.hash === "#scan") showScan();
+    else if (location.hash === "#results") showResults(loadPlan());
     else showHome();
   </script>
 </body>
