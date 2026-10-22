@@ -1,7 +1,7 @@
 /**
- * LOOK Account storage — on-device encrypted history.
- * UI calls this "Account". No network calls.
- * Passphrase → PBKDF2 key → AES-GCM. Face images are never stored.
+ * LOOK Account storage — on-device encrypted history + profile.
+ * Providers: local passphrase, or Google Identity (key derived from Google sub).
+ * Face scan images from LOOK are never stored or uploaded.
  */
 
 const DB_NAME = "look-vault-v1";
@@ -115,6 +115,21 @@ async function decryptJson(key, payload) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
+function defaultProfile(seed) {
+  return {
+    displayName: (seed && seed.displayName) || "Looker",
+    bio: "",
+    pronouns: "",
+    goal: "",
+    location: "",
+    website: "",
+    avatarDataUrl: (seed && seed.avatarDataUrl) || "",
+    avatarRemoteUrl: (seed && seed.avatarRemoteUrl) || "",
+    accent: "mint",
+    updatedAt: Date.now()
+  };
+}
+
 export async function vaultExists() {
   const meta = await idbGet(STORE, "account");
   return !!(meta && meta.salt);
@@ -124,39 +139,172 @@ export async function vaultExists() {
 export async function getVaultMeta() {
   const meta = await idbGet(STORE, "account");
   if (!meta || !meta.salt) return null;
-  return { displayName: meta.displayName || "Account", createdAt: meta.createdAt || null };
+  return {
+    displayName: meta.displayName || "Account",
+    createdAt: meta.createdAt || null,
+    provider: meta.provider || "local",
+    email: meta.email || "",
+    avatarPublic: meta.avatarPublic || "",
+    googleSub: meta.googleSub || null
+  };
 }
 
-export async function createVault(displayName, passphrase) {
+async function writeAccountMeta(partial) {
+  const meta = (await idbGet(STORE, "account")) || {};
+  const next = { ...meta, ...partial };
+  await idbSet(STORE, "account", next);
+  return next;
+}
+
+export async function createVault(displayName, passphrase, profileExtras) {
   if (!displayName || displayName.trim().length < 1) throw new Error("Enter a display name.");
   if (!passphrase || passphrase.length < 8) throw new Error("Passphrase must be at least 8 characters.");
-  if (await vaultExists()) throw new Error("An account already exists on this device. Unlock it instead.");
+  if (await vaultExists()) throw new Error("An account already exists on this device. Log in instead.");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await deriveKey(passphrase, salt);
-  const check = await encryptJson(key, { ok: true, created: Date.now() });
-  await idbSet(STORE, "account", {
+  const profile = defaultProfile({
     displayName: displayName.trim().slice(0, 40),
+    ...(profileExtras || {})
+  });
+  const check = await encryptJson(key, { ok: true, created: Date.now() });
+  const profileEnc = await encryptJson(key, profile);
+  await idbSet(STORE, "account", {
+    displayName: profile.displayName,
     salt: bufToB64(salt),
     check,
+    profileEnc,
+    avatarPublic: profile.avatarDataUrl || profile.avatarRemoteUrl || "",
+    provider: "local",
+    email: "",
     createdAt: Date.now()
   });
-  return { displayName: displayName.trim().slice(0, 40), key };
+  return { displayName: profile.displayName, key, profile, provider: "local" };
 }
 
 export async function unlockVault(passphrase) {
   const meta = await idbGet(STORE, "account");
   if (!meta || !meta.salt) throw new Error("No account on this device yet.");
+  if (meta.provider === "google") {
+    throw new Error("This account uses Google. Tap Continue with Google to log in.");
+  }
   const key = await deriveKey(passphrase, b64ToBuf(meta.salt));
   try {
     await decryptJson(key, meta.check);
   } catch (_) {
     throw new Error("Wrong passphrase.");
   }
-  return { displayName: meta.displayName, key };
+  const profile = meta.profileEnc
+    ? await decryptJson(key, meta.profileEnc)
+    : defaultProfile({ displayName: meta.displayName });
+  return {
+    displayName: profile.displayName || meta.displayName,
+    key,
+    profile,
+    provider: meta.provider || "local",
+    email: meta.email || ""
+  };
+}
+
+/** Create or unlock using Google subject id (from verified GIS credential). */
+export async function loginWithGoogleIdentity(identity) {
+  if (!identity || !identity.sub) throw new Error("Google sign-in did not return a user id.");
+  const material = "look-google-v1:" + identity.sub;
+  const exists = await vaultExists();
+  const meta = exists ? await idbGet(STORE, "account") : null;
+
+  if (exists && meta) {
+    if (meta.provider !== "google" || meta.googleSub !== identity.sub) {
+      throw new Error(
+        "This device already has a different LOOK account. Export a backup, then clear account data to switch."
+      );
+    }
+    const key = await deriveKey(material, b64ToBuf(meta.salt));
+    try {
+      await decryptJson(key, meta.check);
+    } catch (_) {
+      throw new Error("Could not unlock Google account on this device.");
+    }
+    let profile = meta.profileEnc
+      ? await decryptJson(key, meta.profileEnc)
+      : defaultProfile({
+          displayName: identity.name || meta.displayName,
+          avatarRemoteUrl: identity.picture || ""
+        });
+    // Refresh remote avatar / email hints without wiping custom avatar
+    if (identity.picture && !profile.avatarDataUrl) profile.avatarRemoteUrl = identity.picture;
+    if (identity.name && !profile.displayName) profile.displayName = identity.name;
+    await writeAccountMeta({
+      displayName: profile.displayName,
+      email: identity.email || meta.email || "",
+      avatarPublic: profile.avatarDataUrl || profile.avatarRemoteUrl || meta.avatarPublic || "",
+      profileEnc: await encryptJson(key, profile)
+    });
+    return {
+      displayName: profile.displayName,
+      key,
+      profile,
+      provider: "google",
+      email: identity.email || meta.email || ""
+    };
+  }
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveKey(material, salt);
+  const profile = defaultProfile({
+    displayName: (identity.name || "Looker").slice(0, 40),
+    avatarRemoteUrl: identity.picture || ""
+  });
+  const check = await encryptJson(key, { ok: true, created: Date.now(), provider: "google" });
+  const profileEnc = await encryptJson(key, profile);
+  await idbSet(STORE, "account", {
+    displayName: profile.displayName,
+    salt: bufToB64(salt),
+    check,
+    profileEnc,
+    avatarPublic: profile.avatarRemoteUrl || "",
+    provider: "google",
+    googleSub: identity.sub,
+    email: identity.email || "",
+    createdAt: Date.now()
+  });
+  return {
+    displayName: profile.displayName,
+    key,
+    profile,
+    provider: "google",
+    email: identity.email || ""
+  };
+}
+
+export async function saveProfile(key, profile) {
+  const clean = {
+    ...defaultProfile(),
+    ...profile,
+    displayName: String(profile.displayName || "Looker").trim().slice(0, 40),
+    bio: String(profile.bio || "").slice(0, 280),
+    pronouns: String(profile.pronouns || "").slice(0, 40),
+    goal: String(profile.goal || "").slice(0, 120),
+    location: String(profile.location || "").slice(0, 80),
+    website: String(profile.website || "").slice(0, 120),
+    avatarDataUrl: profile.avatarDataUrl || "",
+    avatarRemoteUrl: profile.avatarRemoteUrl || "",
+    accent: profile.accent === "amber" || profile.accent === "foam" ? profile.accent : "mint",
+    updatedAt: Date.now()
+  };
+  // Keep avatars reasonable for IndexedDB
+  if (clean.avatarDataUrl && clean.avatarDataUrl.length > 900000) {
+    throw new Error("Profile photo is too large. Try a smaller image.");
+  }
+  const profileEnc = await encryptJson(key, clean);
+  await writeAccountMeta({
+    displayName: clean.displayName,
+    avatarPublic: clean.avatarDataUrl || clean.avatarRemoteUrl || "",
+    profileEnc
+  });
+  return clean;
 }
 
 export async function saveScan(key, plan) {
-  // Strip anything that could be image-like; store scores + plan text only
   const record = {
     score: plan.score,
     sym: plan.sym,
@@ -196,9 +344,9 @@ export async function exportEncryptedBackup() {
   const meta = await idbGet(STORE, "account");
   const rows = await idbGetAll(HISTORY);
   return {
-    version: 1,
+    version: 2,
     exportedAt: Date.now(),
-    notice: "LOOK Account encrypted backup — keep offline. Contains no face images.",
+    notice: "LOOK Account encrypted backup — keep offline. Contains no LOOK face scans.",
     account: meta,
     history: rows
   };
@@ -213,4 +361,21 @@ export async function clearVault() {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
+}
+
+/** Decode GIS credential JWT payload (browser-side; identity still comes from Google). */
+export function decodeGoogleCredential(credential) {
+  if (!credential || typeof credential !== "string") throw new Error("Missing Google credential.");
+  const parts = credential.split(".");
+  if (parts.length < 2) throw new Error("Invalid Google credential.");
+  const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+  const payload = JSON.parse(json);
+  if (!payload.sub) throw new Error("Google credential missing subject.");
+  return {
+    sub: payload.sub,
+    email: payload.email || "",
+    name: payload.name || payload.given_name || "",
+    picture: payload.picture || "",
+    emailVerified: !!payload.email_verified
+  };
 }
