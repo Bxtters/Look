@@ -1,5 +1,5 @@
 /* LOOK — network-first; bump CACHE to force clients off stale shells. */
-const CACHE = "look-v12-google-password";
+const CACHE = "look-v13-google-id";
 const SHELL = [
   "./",
   "./index.html",

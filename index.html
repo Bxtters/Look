@@ -3874,7 +3874,7 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=12")
+        .register("./sw.js?v=13")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
