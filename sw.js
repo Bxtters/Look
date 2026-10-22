@@ -1,6 +1,6 @@
 /* LOOK — network-first; bump CACHE to force clients off stale shells. */
-const CACHE = "look-v5-results";
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./samples/demo-face.jpg"];
+const CACHE = "look-v6-vault";
+const SHELL = ["./", "./index.html", "./vault.js", "./manifest.webmanifest", "./icon.svg", "./samples/demo-face.jpg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
