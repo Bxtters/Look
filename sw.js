@@ -1,6 +1,14 @@
 /* LOOK — network-first; bump CACHE to force clients off stale shells. */
-const CACHE = "look-v6-vault";
-const SHELL = ["./", "./index.html", "./vault.js", "./manifest.webmanifest", "./icon.svg", "./samples/demo-face.jpg"];
+const CACHE = "look-v7-account-settings";
+const SHELL = [
+  "./",
+  "./index.html",
+  "./vault.js",
+  "./settings.js",
+  "./manifest.webmanifest",
+  "./icon.svg",
+  "./samples/demo-face.jpg"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -19,7 +27,6 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
-  // Always prefer network for HTML so deploys show up on phones
   const isHTML =
     req.mode === "navigate" ||
     (req.headers.get("accept") || "").includes("text/html");

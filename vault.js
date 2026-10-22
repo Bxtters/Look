@@ -1,7 +1,7 @@
 /**
- * LOOK Vault — on-device encrypted history.
- * No network calls. Passphrase → PBKDF2 key → AES-GCM.
- * Face images are never stored.
+ * LOOK Account storage — on-device encrypted history.
+ * UI calls this "Account". No network calls.
+ * Passphrase → PBKDF2 key → AES-GCM. Face images are never stored.
  */
 
 const DB_NAME = "look-vault-v1";
@@ -124,13 +124,13 @@ export async function vaultExists() {
 export async function getVaultMeta() {
   const meta = await idbGet(STORE, "account");
   if (!meta || !meta.salt) return null;
-  return { displayName: meta.displayName || "Vault", createdAt: meta.createdAt || null };
+  return { displayName: meta.displayName || "Account", createdAt: meta.createdAt || null };
 }
 
 export async function createVault(displayName, passphrase) {
   if (!displayName || displayName.trim().length < 1) throw new Error("Enter a display name.");
   if (!passphrase || passphrase.length < 8) throw new Error("Passphrase must be at least 8 characters.");
-  if (await vaultExists()) throw new Error("A vault already exists on this device. Unlock it instead.");
+  if (await vaultExists()) throw new Error("An account already exists on this device. Unlock it instead.");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await deriveKey(passphrase, salt);
   const check = await encryptJson(key, { ok: true, created: Date.now() });
@@ -145,7 +145,7 @@ export async function createVault(displayName, passphrase) {
 
 export async function unlockVault(passphrase) {
   const meta = await idbGet(STORE, "account");
-  if (!meta || !meta.salt) throw new Error("No vault on this device yet.");
+  if (!meta || !meta.salt) throw new Error("No account on this device yet.");
   const key = await deriveKey(passphrase, b64ToBuf(meta.salt));
   try {
     await decryptJson(key, meta.check);
@@ -198,7 +198,7 @@ export async function exportEncryptedBackup() {
   return {
     version: 1,
     exportedAt: Date.now(),
-    notice: "LOOK encrypted backup — keep offline. Contains no face images.",
+    notice: "LOOK Account encrypted backup — keep offline. Contains no face images.",
     account: meta,
     history: rows
   };
