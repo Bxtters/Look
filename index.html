@@ -123,6 +123,14 @@
       margin-top: 6px;
     }
 
+    .build-stamp {
+      margin: 4px 0 0;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(232, 245, 239, 0.35);
+    }
+
     button {
       appearance: none;
       border: 0;
@@ -517,6 +525,7 @@
         <button type="button" id="goScanBtn">Scan my face</button>
         <button type="button" class="ghost" id="goTipsBtn">Tips &amp; routines</button>
       </div>
+      <p class="build-stamp" id="buildStamp">Build 2026-10-22 · tips + back</p>
     </div>
 
     <section class="section" id="tips" aria-labelledby="tips-title">
@@ -1128,7 +1137,13 @@
     });
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.update().catch(() => {}));
+      });
+      navigator.serviceWorker
+        .register("./sw.js?v=3")
+        .then((reg) => reg.update().catch(() => {}))
+        .catch(() => {});
     }
 
     if (location.hash === "#scan") showScan();
