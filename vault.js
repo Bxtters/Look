@@ -158,7 +158,7 @@ async function writeAccountMeta(partial) {
 
 export async function createVault(displayName, passphrase, profileExtras) {
   if (!displayName || displayName.trim().length < 1) throw new Error("Enter a display name.");
-  if (!passphrase || passphrase.length < 8) throw new Error("Passphrase must be at least 8 characters.");
+  if (!passphrase || passphrase.length < 8) throw new Error("Password must be at least 8 characters.");
   if (await vaultExists()) throw new Error("An account already exists on this device. Log in instead.");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await deriveKey(passphrase, salt);
@@ -191,7 +191,7 @@ export async function unlockVault(passphrase) {
   try {
     await decryptJson(key, meta.check);
   } catch (_) {
-    throw new Error("Wrong passphrase.");
+    throw new Error("Wrong password.");
   }
   const profile = meta.profileEnc
     ? await decryptJson(key, meta.profileEnc)
