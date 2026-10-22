@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LOOK">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="description" content="LOOK rates your face from 1 to 10 with on-device MediaPipe face mocap, plus research-backed tips.">
+  <meta name="description" content="LOOK rates your face on the PSL scale with on-device MediaPipe face mocap, plus research-backed tips.">
   <title>LOOK</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -1102,6 +1102,54 @@
       width: min(100% - 16px, 28rem);
     }
 
+    .score-panel-inner {
+      transition: filter 0.35s var(--ease), opacity 0.35s var(--ease);
+    }
+
+    .score-panel.is-locked .score-panel-inner {
+      filter: blur(14px);
+      opacity: 0.55;
+      user-select: none;
+    }
+
+    .score-auth-gate {
+      position: absolute;
+      inset: auto 0 -4px 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 18px 16px;
+      pointer-events: auto;
+      background: linear-gradient(
+        180deg,
+        rgba(7, 17, 15, 0.15) 0%,
+        rgba(7, 17, 15, 0.72) 45%,
+        rgba(7, 17, 15, 0.88) 100%
+      );
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .score-auth-gate[hidden] { display: none !important; }
+
+    .score-auth-gate p {
+      margin: 0;
+      max-width: 16rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: rgba(232, 245, 239, 0.86);
+    }
+
+    .score-auth-gate button {
+      border-radius: 999px;
+      min-height: 44px;
+      padding: 0 22px;
+      font-size: 0.9rem;
+    }
+
     .score-label {
       margin: 0 0 4px;
       font-size: 0.68rem;
@@ -1302,7 +1350,7 @@
     </div>
     <div class="home-hero">
       <h1 class="brand">LOOK</h1>
-      <p class="home-lead">Scan → score → improvement graph → a day-by-day plan with products and ingredients matched to your read.</p>
+      <p class="home-lead">Scan → PSL score → improvement graph → a day-by-day plan with products and ingredients matched to your read.</p>
       <div class="home-cta">
         <button type="button" id="goScanBtn">Scan my face</button>
         <button type="button" class="ghost" id="goTipsBtn">Last results</button>
@@ -1320,7 +1368,7 @@
     <section class="section" id="tips" aria-labelledby="tips-title">
       <h2 id="tips-title">Your plan</h2>
       <div id="personalBanner" class="personal-banner">
-        <p class="empty-plan" id="planEmpty">No scan yet. Hit <strong>Scan my face</strong>, then <strong>Lock score</strong> for your graph, daily plan, and product guide.</p>
+        <p class="empty-plan" id="planEmpty">No scan yet. Sign in, hit <strong>Scan my face</strong>, then <strong>Lock PSL</strong> for your graph, daily plan, and product guide.</p>
       </div>
       <div id="focusChips" class="focus-chips" hidden></div>
       <div id="personalTips"></div>
@@ -1366,13 +1414,19 @@
       <canvas id="mesh"></canvas>
 
       <div class="score-panel" id="scorePanel" hidden>
-        <p class="score-label">Your look</p>
-        <p class="score-value" id="scoreValue">—</p>
-        <p class="score-meta" id="scoreMeta">Hold still for a clean read</p>
-        <div class="bars" aria-hidden="true">
-          <div class="bar"><span>Symmetry</span><i id="barSym"></i></div>
-          <div class="bar"><span>Proportion</span><i id="barProp"></i></div>
-          <div class="bar"><span>Harmony</span><i id="barHarm"></i></div>
+        <div class="score-panel-inner" id="scorePanelInner">
+          <p class="score-label">Your PSL</p>
+          <p class="score-value" id="scoreValue">—</p>
+          <p class="score-meta" id="scoreMeta">Hold still for a clean PSL read</p>
+          <div class="bars" aria-hidden="true">
+            <div class="bar"><span>Symmetry</span><i id="barSym"></i></div>
+            <div class="bar"><span>Proportion</span><i id="barProp"></i></div>
+            <div class="bar"><span>Harmony</span><i id="barHarm"></i></div>
+          </div>
+        </div>
+        <div class="score-auth-gate" id="scoreAuthGate" hidden>
+          <p>Sign up or log in to reveal your PSL and lock it in.</p>
+          <button type="button" id="scoreAuthBtn">Sign up / Log in</button>
         </div>
       </div>
 
@@ -1393,7 +1447,7 @@
       <p id="status">Ready when you are.</p>
       <div class="actions">
         <button type="button" class="ghost" id="flipBtn" disabled>Flip</button>
-        <button type="button" id="lockScoreBtn" disabled>Lock score</button>
+        <button type="button" id="lockScoreBtn" disabled>Lock PSL</button>
       </div>
     </footer>
   </div>
@@ -1414,7 +1468,7 @@
     </div>
 
     <div class="results-hero">
-      <p class="score-label">Your score</p>
+      <p class="score-label">Your PSL</p>
       <p class="score-value" id="resultsScore">—</p>
       <p class="score-meta" id="resultsMeta">From your face scan</p>
       <p class="narrative" id="resultsNarrative" hidden></p>
@@ -2431,13 +2485,16 @@
       const rounded = Settings.formatScore(plan.score, userSettings.scoreDecimals);
       const target = Settings.formatScore(plan.lift.target, userSettings.scoreDecimals);
       personalBanner.innerHTML =
-        '<p class="score-line">Last score <em>' +
+        '<p class="score-line">Last PSL <em>' +
         rounded +
         "</em> · plan targets <em>" +
         target +
         "</em></p><p>" +
         plan.summary +
-        ' <button type="button" class="ghost" id="openLastResults" style="margin-top:10px;min-height:40px;padding:8px 12px;font-size:0.85rem">Open full results</button></p>';
+        (accountSession
+          ? ' <button type="button" class="ghost" id="openLastResults" style="margin-top:10px;min-height:40px;padding:8px 12px;font-size:0.85rem">Open full results</button>'
+          : ' <button type="button" class="ghost" id="openLastResults" style="margin-top:10px;min-height:40px;padding:8px 12px;font-size:0.85rem">Sign up / Log in</button>') +
+        "</p>";
 
       focusChips.hidden = false;
       focusChips.innerHTML = plan.focuses
@@ -2465,7 +2522,7 @@
       activePlan = plan;
       chartWeeks = userSettings.chartWeeks || chartWeeks;
       resultsScore.textContent = Settings.formatScore(plan.score, userSettings.scoreDecimals);
-      resultsMeta.textContent = (plan.label || "Your look") + " · locked from scan";
+      resultsMeta.textContent = (plan.label || "PSL read") + " · locked from scan";
       const narr = document.getElementById("resultsNarrative");
       if (narr) {
         narr.hidden = !plan.narrative;
@@ -2523,10 +2580,19 @@
       document.body.classList.remove("mode-home", "mode-results");
       document.body.classList.add("mode-scan");
       history.replaceState({ view: "scan" }, "", "#scan");
-      setStatus("Allow the camera, center your face, then Lock score.");
+      setStatus(
+        accountSession
+          ? "Allow the camera, center your face, then Lock PSL."
+          : "Allow the camera — sign up or log in to reveal and lock your PSL."
+      );
     }
 
     function showResults(plan) {
+      if (!accountSession) {
+        openSignup();
+        setStatus("Sign up or log in to view your PSL results.", "warn");
+        return;
+      }
       if (!plan) {
         plan = loadPlan();
       }
@@ -2549,7 +2615,27 @@
       window.scrollTo(0, 0);
     }
 
+    function updateScoreAuthGate() {
+      const gate = document.getElementById("scoreAuthGate");
+      if (!scorePanel || !gate) return;
+      const needsAuth = !accountSession;
+      scorePanel.classList.toggle("is-locked", needsAuth && !scorePanel.hidden);
+      gate.hidden = !(needsAuth && !scorePanel.hidden);
+      if (needsAuth) {
+        lockScoreBtn.disabled = true;
+        lockScoreBtn.title = "Sign up or log in to lock your PSL";
+      } else if (!scorePanel.hidden && smooth.score) {
+        lockScoreBtn.disabled = false;
+        lockScoreBtn.title = "";
+      }
+    }
+
     async function lockAndShowResults() {
+      if (!accountSession) {
+        setStatus("Sign up or log in to reveal and lock your PSL.", "warn");
+        openSignup();
+        return;
+      }
       const src =
         held || {
           score: smooth.score,
@@ -2560,7 +2646,7 @@
           label: scoreMeta.textContent
         };
       if (!src || !src.score || scorePanel.hidden) {
-        setStatus("Keep your face in frame until a score appears, then Lock score.", "warn");
+        setStatus("Keep your face in frame until a PSL appears, then Lock PSL.", "warn");
         return;
       }
       holdScore = true;
@@ -2689,12 +2775,26 @@
       } else if (exists) {
         accountStatus.textContent =
           meta && meta.provider === "google"
-            ? "Account on this device · continue with Google to unlock"
-            : "Account on this device · log in to unlock history";
+            ? "Account on this device · continue with Google to unlock PSL"
+            : "Account on this device · log in to unlock PSL";
         historySection.hidden = true;
       } else {
-        accountStatus.textContent = "Sign up to save scores · face scans never leave this device";
+        accountStatus.textContent = "Sign up to reveal PSL · face scans never leave this device";
         historySection.hidden = true;
+      }
+      updateScoreAuthGate();
+      if (accountSession && !scorePanel.hidden && smooth.score) {
+        scoreValue.textContent = Settings.formatScore(
+          holdScore && held ? held.score : smooth.score,
+          userSettings.scoreDecimals
+        );
+        scoreMeta.textContent =
+          holdScore && held ? "Held · " + (held.label || "") : scoreMeta.textContent;
+        if (!(holdScore && held)) {
+          /* keep live meta if tracking */
+        }
+        paintBars(smooth.sym, smooth.prop, smooth.harm);
+        lockScoreBtn.disabled = false;
       }
     }
 
@@ -3015,6 +3115,9 @@
     signupBtn.addEventListener("click", openSignup);
     if (loginBtnResults) loginBtnResults.addEventListener("click", openLogin);
     if (signupBtnResults) signupBtnResults.addEventListener("click", openSignup);
+    document.getElementById("scoreAuthBtn").addEventListener("click", () => {
+      openSignup();
+    });
     profileBtn.addEventListener("click", openProfileModal);
     if (profileBtnResults) profileBtnResults.addEventListener("click", openProfileModal);
     settingsBtn.addEventListener("click", openSettingsModal);
@@ -3310,12 +3413,23 @@
       smooth.smile = lerp(smooth.smile || 0, result.smile || 0, t);
       const display = holdScore && held ? held : smooth;
       const rounded = Math.round(display.score * 10) / 10;
-      scoreValue.textContent = Settings.formatScore(display.score, userSettings.scoreDecimals);
-      scoreMeta.textContent = holdScore ? "Held · " + (held.label || result.label) : result.label;
+      const loggedIn = !!accountSession;
+      scoreValue.textContent = loggedIn
+        ? Settings.formatScore(display.score, userSettings.scoreDecimals)
+        : "••";
+      scoreMeta.textContent = loggedIn
+        ? holdScore
+          ? "Held · " + (held.label || result.label)
+          : result.label
+        : "PSL hidden — sign up or log in";
       scorePanel.hidden = false;
-      scoreValue.classList.toggle("is-hot", rounded >= 8);
-      paintBars(display.sym, display.prop, display.harm);
-      lockScoreBtn.disabled = false;
+      scoreValue.classList.toggle("is-hot", loggedIn && rounded >= 8);
+      if (loggedIn) paintBars(display.sym, display.prop, display.harm);
+      else {
+        paintBars(0.15, 0.15, 0.15);
+      }
+      lockScoreBtn.disabled = !loggedIn;
+      updateScoreAuthGate();
     }
 
     function resizeCanvas(w, h) {
@@ -3451,7 +3565,11 @@
       gate.hidden = true;
       flipBtn.disabled = false;
       lockScoreBtn.disabled = true;
-      setStatus("Face the camera — when the score settles, tap Lock score.");
+      setStatus(
+        accountSession
+          ? "Face the camera — when your PSL settles, tap Lock PSL."
+          : "Face the camera — sign up or log in to reveal and lock your PSL."
+      );
     }
 
     function loop() {
@@ -3571,7 +3689,7 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=9")
+        .register("./sw.js?v=10")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
