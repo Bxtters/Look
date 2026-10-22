@@ -1,9 +1,11 @@
-/* LOOK offline shell — network-first for app, cache CDN/models as opaque OK. */
-const CACHE = "look-v2";
+/* LOOK — network-first; bump CACHE to force clients off stale shells. */
+const CACHE = "look-v3-20261022";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./samples/demo-face.jpg"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -17,6 +19,22 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
+  // Always prefer network for HTML so deploys show up on phones
+  const isHTML =
+    req.mode === "navigate" ||
+    (req.headers.get("accept") || "").includes("text/html");
+  if (isHTML) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
   event.respondWith(
     fetch(req)
       .then((res) => {
@@ -24,6 +42,6 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
+      .catch(() => caches.match(req))
   );
 });
