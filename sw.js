@@ -1,10 +1,11 @@
 /* LOOK — network-first; bump CACHE to force clients off stale shells. */
-const CACHE = "look-v8-pill-tools";
+const CACHE = "look-v9-auth-profile";
 const SHELL = [
   "./",
   "./index.html",
   "./vault.js",
   "./settings.js",
+  "./config.js",
   "./manifest.webmanifest",
   "./icon.svg",
   "./samples/demo-face.jpg"

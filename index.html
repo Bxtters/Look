@@ -473,7 +473,7 @@
       color: rgba(232, 245, 239, 0.38);
     }
 
-    /* Account + settings — oval utility chips */
+    /* Auth + settings — oval utility chips */
     .hero-tools {
       display: flex;
       flex-wrap: nowrap;
@@ -482,7 +482,7 @@
       justify-content: flex-end;
     }
 
-    button.account-chip,
+    button.auth-chip,
     button.settings-chip {
       margin: 0;
       min-height: 34px;
@@ -500,7 +500,13 @@
       white-space: nowrap;
     }
 
-    button.account-chip:hover,
+    button.auth-chip.primary-chip {
+      background: rgba(94, 240, 168, 0.16);
+      color: var(--foam);
+      box-shadow: inset 0 0 0 1px rgba(94, 240, 168, 0.45);
+    }
+
+    button.auth-chip:hover,
     button.settings-chip:hover {
       filter: none;
       transform: none;
@@ -509,10 +515,150 @@
       box-shadow: inset 0 0 0 1px rgba(94, 240, 168, 0.4);
     }
 
-    button.account-chip:active,
+    button.auth-chip:active,
     button.settings-chip:active {
       transform: none;
       background: rgba(94, 240, 168, 0.16);
+    }
+
+    button.profile-avatar-btn {
+      margin: 0;
+      width: 36px;
+      height: 36px;
+      min-height: 36px;
+      padding: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba(94, 240, 168, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(94, 240, 168, 0.4);
+      transform: none;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    button.profile-avatar-btn:hover,
+    button.profile-avatar-btn:active {
+      filter: none;
+      transform: none;
+      box-shadow: inset 0 0 0 2px var(--mint);
+    }
+
+    button.profile-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    button.profile-avatar-btn .avatar-fallback {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--mint);
+      letter-spacing: 0.02em;
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0 12px;
+      color: rgba(232, 245, 239, 0.4);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .google-btn {
+      width: 100%;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-radius: 999px;
+      background: #fff;
+      color: #1f1f1f;
+      font-family: Figtree, sans-serif;
+      font-weight: 600;
+      font-size: 0.92rem;
+      box-shadow: none;
+    }
+
+    .google-btn:hover { filter: brightness(0.97); transform: none; }
+    .google-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+
+    .profile-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .profile-avatar-edit {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba(94, 240, 168, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(94, 240, 168, 0.35);
+      cursor: pointer;
+      padding: 0;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      transform: none;
+    }
+
+    .profile-avatar-edit:hover,
+    .profile-avatar-edit:active {
+      filter: none;
+      transform: none;
+    }
+
+    .profile-avatar-edit img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-avatar-edit .avatar-fallback {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 2rem;
+      color: var(--mint);
+    }
+
+    .profile-avatar-edit .edit-badge {
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: 6px 0;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(7, 17, 15, 0.72);
+      color: var(--foam);
+      font-family: Figtree, sans-serif;
+      font-weight: 600;
+    }
+
+    .gsi-parent {
+      min-height: 44px;
+      display: flex;
+      justify-content: center;
+      margin: 4px 0 8px;
     }
 
     body.hide-products .product-list { display: none !important; }
@@ -1110,7 +1256,7 @@
         text-align: left;
       }
 
-      button.account-chip,
+      button.auth-chip,
       button.settings-chip {
         padding: 0 14px;
         font-size: 0.74rem;
@@ -1138,9 +1284,14 @@
 
   <main id="home" class="view" aria-label="Home">
     <div class="top-utility" aria-label="Account tools">
-      <div class="hero-tools">
+      <div class="hero-tools" id="authToolsHome">
         <button type="button" class="settings-chip" id="settingsBtn">Settings</button>
-        <button type="button" class="account-chip" id="accountBtn">Account</button>
+        <button type="button" class="auth-chip" id="loginBtn" hidden>Log in</button>
+        <button type="button" class="auth-chip primary-chip" id="signupBtn" hidden>Sign up</button>
+        <button type="button" class="profile-avatar-btn" id="profileBtn" hidden aria-label="Open profile">
+          <span class="avatar-fallback" id="profileFallback">?</span>
+          <img id="profileImg" alt="" hidden>
+        </button>
       </div>
     </div>
     <div class="home-hero">
@@ -1245,9 +1396,14 @@
     <div class="results-bar">
       <button type="button" class="ghost back-btn" id="resultsBackBtn">← Back</button>
       <h1 class="brand">LOOK</h1>
-      <div class="hero-tools">
+      <div class="hero-tools" id="authToolsResults">
         <button type="button" class="settings-chip" id="settingsBtnResults">Settings</button>
-        <button type="button" class="account-chip" id="accountBtnResults">Account</button>
+        <button type="button" class="auth-chip" id="loginBtnResults" hidden>Log in</button>
+        <button type="button" class="auth-chip primary-chip" id="signupBtnResults" hidden>Sign up</button>
+        <button type="button" class="profile-avatar-btn" id="profileBtnResults" hidden aria-label="Open profile">
+          <span class="avatar-fallback" id="profileFallbackResults">?</span>
+          <img id="profileImgResults" alt="" hidden>
+        </button>
       </div>
     </div>
 
@@ -1301,15 +1457,22 @@
     </section>
   </div>
 
-  <div class="modal-backdrop" id="accountModal" hidden>
-    <div class="modal" role="dialog" aria-labelledby="accountModalTitle" aria-modal="true">
-      <h2 id="accountModalTitle">Account</h2>
-      <p class="privacy">
-        Your <strong>Account</strong> lives only on this device: display name + passphrase stay in the browser.
-        Scores are encrypted with a key derived from your passphrase (PBKDF2 + AES-GCM).
-        <strong>No email, no cloud login, no face images stored or uploaded.</strong>
+  <div class="modal-backdrop" id="authModal" hidden>
+    <div class="modal" role="dialog" aria-labelledby="authModalTitle" aria-modal="true">
+      <h2 id="authModalTitle">Sign up</h2>
+      <p class="privacy" id="authPrivacy">
+        Create a LOOK account on this device. Scores stay encrypted in your browser (PBKDF2 + AES-GCM).
+        Face scans are never uploaded. Google sign-in only shares the identity Google already shows you — LOOK still keeps plans on-device.
       </p>
-      <div id="accountCreate">
+
+      <button type="button" class="google-btn" id="googleAuthBtn">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+      <div class="gsi-parent" id="gsiButtonParent" hidden></div>
+      <div class="auth-divider">or use a passphrase</div>
+
+      <div id="authSignupFields">
         <label for="accName">Display name</label>
         <input id="accName" autocomplete="nickname" maxlength="40" placeholder="e.g. Alex">
         <label for="accPass">Passphrase (min 8)</label>
@@ -1317,20 +1480,60 @@
         <label for="accPass2">Confirm passphrase</label>
         <input id="accPass2" type="password" autocomplete="new-password" placeholder="••••••••">
       </div>
-      <div id="accountUnlock" hidden>
+      <div id="authLoginFields" hidden>
         <label for="accUnlock">Passphrase for <span id="accUnlockName">your account</span></label>
         <input id="accUnlock" type="password" autocomplete="current-password" placeholder="••••••••">
       </div>
-      <div id="accountOpen" hidden>
-        <p class="privacy" style="margin:0">Unlocked on this device. Save results from a scan, reopen history on Home, or open Settings to customize LOOK.</p>
-      </div>
-      <p class="err" id="accountErr" hidden></p>
+      <p class="err" id="authErr" hidden></p>
       <div class="modal-actions">
-        <button type="button" id="accountSubmit">Create account</button>
-        <button type="button" class="ghost" id="accountOpenSettings" hidden>Settings</button>
-        <button type="button" class="ghost" id="accountCancel">Close</button>
-        <button type="button" class="ghost" id="accountExport" hidden>Export backup</button>
-        <button type="button" class="ghost" id="accountLock" hidden>Lock account</button>
+        <button type="button" id="authSubmit">Sign up</button>
+        <button type="button" class="ghost" id="authSwitch">Have an account? Log in</button>
+        <button type="button" class="ghost" id="authCancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="profileModal" hidden>
+    <div class="modal modal-wide" role="dialog" aria-labelledby="profileModalTitle" aria-modal="true">
+      <h2 id="profileModalTitle">Your profile</h2>
+      <p class="privacy">Customize how you appear in LOOK. Profile photo and details stay on this device (Google photo URL may load from Google when online).</p>
+
+      <div class="profile-hero">
+        <button type="button" class="profile-avatar-edit" id="profileAvatarEdit" aria-label="Change profile photo">
+          <span class="avatar-fallback" id="profileEditFallback">?</span>
+          <img id="profileEditImg" alt="" hidden>
+          <span class="edit-badge">Edit</span>
+        </button>
+        <input type="file" id="profileAvatarInput" accept="image/*" hidden>
+        <p id="profileProviderNote" class="build-stamp" style="text-transform:none;letter-spacing:0.02em;margin:0"></p>
+      </div>
+
+      <label for="profName">Display name</label>
+      <input id="profName" maxlength="40" autocomplete="nickname">
+      <label for="profPronouns">Pronouns</label>
+      <input id="profPronouns" maxlength="40" placeholder="optional">
+      <label for="profBio">Bio</label>
+      <input id="profBio" maxlength="280" placeholder="A short line about your goals">
+      <label for="profGoal">Focus goal</label>
+      <input id="profGoal" maxlength="120" placeholder="e.g. Clearer skin, better sleep">
+      <label for="profLocation">Location</label>
+      <input id="profLocation" maxlength="80" placeholder="optional">
+      <label for="profWebsite">Link</label>
+      <input id="profWebsite" maxlength="120" placeholder="optional">
+      <label for="profAccent">Accent</label>
+      <select id="profAccent">
+        <option value="mint">Mint</option>
+        <option value="amber">Amber</option>
+        <option value="foam">Foam</option>
+      </select>
+
+      <p class="err" id="profileErr" hidden></p>
+      <div class="modal-actions">
+        <button type="button" id="profileSave">Save profile</button>
+        <button type="button" class="ghost" id="profileOpenSettings">Settings</button>
+        <button type="button" class="ghost" id="profileExport">Export backup</button>
+        <button type="button" class="ghost" id="profileSignOut">Sign out</button>
+        <button type="button" class="ghost" id="profileCancel">Close</button>
       </div>
     </div>
   </div>
@@ -1339,6 +1542,14 @@
     <div class="modal modal-wide" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
       <h2 id="settingsModalTitle">Settings</h2>
       <p class="privacy">Customize how LOOK presents scores, plans, and the scan. Preferences stay on this device — they are not uploaded.</p>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Google Client ID</strong>
+          <span>OAuth Web client ID for Continue with Google (authorized origin: this site).</span>
+        </div>
+        <input id="setGoogleClientId" style="min-width:9rem;max-width:11rem;min-height:40px;padding:8px 10px;border:0;background:var(--ink);color:var(--foam);font:500 0.75rem Figtree,sans-serif;box-shadow:inset 0 0 0 1px var(--line)" placeholder="xxxxx.apps.googleusercontent.com" autocomplete="off">
+      </div>
 
       <div class="setting-row">
         <div class="setting-copy">
@@ -1472,12 +1683,17 @@
     } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.17/+esm";
     import * as Vault from "./vault.js";
     import * as Settings from "./settings.js";
+    import { GOOGLE_CLIENT_ID as CONFIG_GOOGLE_CLIENT_ID } from "./config.js";
 
     const MP_WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.17/wasm";
     const MODEL =
       "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
     let userSettings = Settings.applyDocumentSettings(Settings.loadSettings());
+    let googleClientId =
+      localStorage.getItem("look.googleClientId") || CONFIG_GOOGLE_CLIENT_ID || "";
+    let googleReady = null;
+    let authMode = "signup"; // signup | login
 
     const L = {
       forehead: 10, chin: 152, noseTip: 1, noseBridge: 6,
@@ -1520,7 +1736,7 @@
     const resBarProp = document.getElementById("resBarProp");
     const resBarHarm = document.getElementById("resBarHarm");
     const PLAN_KEY = "look.personalPlan.v3";
-    let accountSession = null; // { displayName, key } — on-device Account
+    let accountSession = null; // { displayName, key, profile, provider, email }
 
     const video = document.getElementById("cam");
     const canvas = document.getElementById("mesh");
@@ -2356,52 +2572,122 @@
       }
     }
 
-    const accountModal = document.getElementById("accountModal");
+    const authModal = document.getElementById("authModal");
+    const profileModal = document.getElementById("profileModal");
     const settingsModal = document.getElementById("settingsModal");
-    const accountBtn = document.getElementById("accountBtn");
-    const accountBtnResults = document.getElementById("accountBtnResults");
     const settingsBtn = document.getElementById("settingsBtn");
     const settingsBtnResults = document.getElementById("settingsBtnResults");
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    const loginBtnResults = document.getElementById("loginBtnResults");
+    const signupBtnResults = document.getElementById("signupBtnResults");
+    const profileBtn = document.getElementById("profileBtn");
+    const profileBtnResults = document.getElementById("profileBtnResults");
     const accountStatus = document.getElementById("accountStatus");
-    const accountCreate = document.getElementById("accountCreate");
-    const accountUnlock = document.getElementById("accountUnlock");
-    const accountOpen = document.getElementById("accountOpen");
-    const accountSubmit = document.getElementById("accountSubmit");
-    const accountCancel = document.getElementById("accountCancel");
-    const accountExport = document.getElementById("accountExport");
-    const accountLock = document.getElementById("accountLock");
-    const accountOpenSettings = document.getElementById("accountOpenSettings");
-    const accountErr = document.getElementById("accountErr");
     const historySection = document.getElementById("historySection");
     const historyList = document.getElementById("historyList");
     const saveAccountBtn = document.getElementById("saveAccountBtn");
+    const authErr = document.getElementById("authErr");
+    const profileErr = document.getElementById("profileErr");
 
-    function showAccountErr(msg) {
+    function showAuthErr(msg) {
       if (!msg) {
-        accountErr.hidden = true;
-        accountErr.textContent = "";
+        authErr.hidden = true;
+        authErr.textContent = "";
         return;
       }
-      accountErr.hidden = false;
-      accountErr.textContent = msg;
+      authErr.hidden = false;
+      authErr.textContent = msg;
+    }
+
+    function showProfileErr(msg) {
+      if (!msg) {
+        profileErr.hidden = true;
+        profileErr.textContent = "";
+        return;
+      }
+      profileErr.hidden = false;
+      profileErr.textContent = msg;
+    }
+
+    function initialsFrom(name) {
+      const parts = String(name || "?").trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return "?";
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function avatarSrc(profile, meta) {
+      if (profile && profile.avatarDataUrl) return profile.avatarDataUrl;
+      if (profile && profile.avatarRemoteUrl) return profile.avatarRemoteUrl;
+      if (meta && meta.avatarPublic) return meta.avatarPublic;
+      return "";
+    }
+
+    function paintAvatarButton(btn, img, fallback, src, name) {
+      if (!btn) return;
+      fallback.textContent = initialsFrom(name);
+      if (src) {
+        img.src = src;
+        img.hidden = false;
+        fallback.hidden = true;
+      } else {
+        img.removeAttribute("src");
+        img.hidden = true;
+        fallback.hidden = false;
+      }
+    }
+
+    function applyProfileAccent(profile) {
+      const accent = profile && profile.accent;
+      if (accent === "amber") document.documentElement.style.setProperty("--mint", "#ffb454");
+      else if (accent === "foam") document.documentElement.style.setProperty("--mint", "#e8f5ef");
+      else document.documentElement.style.setProperty("--mint", "#5ef0a8");
     }
 
     async function refreshAccountChrome() {
       const exists = await Vault.vaultExists();
-      if (accountSession) {
-        accountStatus.textContent = "Account unlocked · " + accountSession.displayName + " (on-device)";
-        accountBtn.textContent = accountSession.displayName;
-        if (accountBtnResults) accountBtnResults.textContent = accountSession.displayName;
+      const meta = exists ? await Vault.getVaultMeta() : null;
+      const loggedIn = !!accountSession;
+
+      [loginBtn, signupBtn, loginBtnResults, signupBtnResults].forEach((el) => {
+        if (el) el.hidden = loggedIn;
+      });
+      [profileBtn, profileBtnResults].forEach((el) => {
+        if (el) el.hidden = !loggedIn;
+      });
+
+      if (loggedIn) {
+        const name = accountSession.profile.displayName || accountSession.displayName;
+        const src = avatarSrc(accountSession.profile);
+        paintAvatarButton(
+          profileBtn,
+          document.getElementById("profileImg"),
+          document.getElementById("profileFallback"),
+          src,
+          name
+        );
+        paintAvatarButton(
+          profileBtnResults,
+          document.getElementById("profileImgResults"),
+          document.getElementById("profileFallbackResults"),
+          src,
+          name
+        );
+        applyProfileAccent(accountSession.profile);
+        accountStatus.textContent =
+          "Signed in · " +
+          name +
+          (accountSession.provider === "google" ? " · Google" : " · on-device");
         await renderHistory();
       } else if (exists) {
-        accountStatus.textContent = "Account locked — unlock to see history on this device";
-        accountBtn.textContent = "Unlock";
-        if (accountBtnResults) accountBtnResults.textContent = "Unlock";
+        accountStatus.textContent =
+          meta && meta.provider === "google"
+            ? "Account on this device · continue with Google to unlock"
+            : "Account on this device · log in to unlock history";
         historySection.hidden = true;
       } else {
-        accountStatus.textContent = "Optional on-device Account · no email · no face uploads";
-        accountBtn.textContent = "Account";
-        if (accountBtnResults) accountBtnResults.textContent = "Account";
+        accountStatus.textContent = "Sign up to save scores · face scans never leave this device";
         historySection.hidden = true;
       }
     }
@@ -2447,46 +2733,205 @@
       });
     }
 
-    async function openAccountModal() {
-      showAccountErr("");
+    async function configureAuthModal(mode) {
+      showAuthErr("");
+      authMode = mode;
       const exists = await Vault.vaultExists();
-      if (accountSession) {
-        document.getElementById("accountModalTitle").textContent = "Account unlocked";
-        accountCreate.hidden = true;
-        accountUnlock.hidden = true;
-        accountOpen.hidden = false;
-        accountSubmit.hidden = true;
-        accountExport.hidden = false;
-        accountLock.hidden = false;
-        accountOpenSettings.hidden = false;
-      } else if (exists) {
-        document.getElementById("accountModalTitle").textContent = "Unlock Account";
-        accountCreate.hidden = true;
-        accountUnlock.hidden = false;
-        accountOpen.hidden = true;
-        accountSubmit.hidden = false;
-        accountSubmit.textContent = "Unlock";
-        accountExport.hidden = true;
-        accountLock.hidden = true;
-        accountOpenSettings.hidden = true;
-        const meta = await Vault.getVaultMeta();
+      const meta = exists ? await Vault.getVaultMeta() : null;
+      const title = document.getElementById("authModalTitle");
+      const submit = document.getElementById("authSubmit");
+      const switchBtn = document.getElementById("authSwitch");
+      const signupFields = document.getElementById("authSignupFields");
+      const loginFields = document.getElementById("authLoginFields");
+
+      if (mode === "login") {
+        title.textContent = "Log in";
+        submit.textContent = "Log in";
+        switchBtn.textContent = "Need an account? Sign up";
+        signupFields.hidden = true;
+        loginFields.hidden = false;
         document.getElementById("accUnlockName").textContent =
           (meta && meta.displayName) || "your account";
+        if (meta && meta.provider === "google") {
+          loginFields.hidden = true;
+          submit.hidden = true;
+          showAuthErr("This device account uses Google — tap Continue with Google.");
+        } else {
+          submit.hidden = false;
+        }
       } else {
-        document.getElementById("accountModalTitle").textContent = "Create Account";
-        accountCreate.hidden = false;
-        accountUnlock.hidden = true;
-        accountOpen.hidden = true;
-        accountSubmit.hidden = false;
-        accountSubmit.textContent = "Create account";
-        accountExport.hidden = true;
-        accountLock.hidden = true;
-        accountOpenSettings.hidden = true;
+        title.textContent = "Sign up";
+        submit.textContent = "Sign up";
+        submit.hidden = false;
+        switchBtn.textContent = "Have an account? Log in";
+        signupFields.hidden = false;
+        loginFields.hidden = true;
+        if (exists) {
+          showAuthErr("An account already exists on this device. Log in instead.");
+          signupFields.hidden = true;
+        }
       }
-      accountModal.hidden = false;
+      authModal.hidden = false;
+      ensureGoogle().catch(() => {});
+    }
+
+    function openSignup() {
+      profileModal.hidden = true;
+      configureAuthModal("signup");
+    }
+
+    function openLogin() {
+      profileModal.hidden = true;
+      configureAuthModal("login");
+    }
+
+    function fillProfileForm() {
+      const p = accountSession.profile;
+      document.getElementById("profName").value = p.displayName || "";
+      document.getElementById("profPronouns").value = p.pronouns || "";
+      document.getElementById("profBio").value = p.bio || "";
+      document.getElementById("profGoal").value = p.goal || "";
+      document.getElementById("profLocation").value = p.location || "";
+      document.getElementById("profWebsite").value = p.website || "";
+      document.getElementById("profAccent").value = p.accent || "mint";
+      document.getElementById("profileProviderNote").textContent =
+        accountSession.provider === "google"
+          ? "Signed in with Google" + (accountSession.email ? " · " + accountSession.email : "")
+          : "Passphrase account · on this device only";
+      const src = avatarSrc(p);
+      paintAvatarButton(
+        document.getElementById("profileAvatarEdit"),
+        document.getElementById("profileEditImg"),
+        document.getElementById("profileEditFallback"),
+        src,
+        p.displayName
+      );
+    }
+
+    function openProfileModal() {
+      if (!accountSession) {
+        openLogin();
+        return;
+      }
+      showProfileErr("");
+      fillProfileForm();
+      authModal.hidden = true;
+      profileModal.hidden = false;
+    }
+
+    function loadGoogleScript() {
+      return new Promise((resolve, reject) => {
+        if (window.google && window.google.accounts && window.google.accounts.id) {
+          resolve();
+          return;
+        }
+        const existing = document.querySelector('script[data-look-gsi="1"]');
+        if (existing) {
+          existing.addEventListener("load", () => resolve());
+          existing.addEventListener("error", () => reject(new Error("Google script failed")));
+          return;
+        }
+        const s = document.createElement("script");
+        s.src = "https://accounts.google.com/gsi/client";
+        s.async = true;
+        s.defer = true;
+        s.dataset.lookGsi = "1";
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("Could not load Google Identity Services"));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureGoogle() {
+      googleClientId =
+        localStorage.getItem("look.googleClientId") || CONFIG_GOOGLE_CLIENT_ID || googleClientId || "";
+      if (!googleClientId) return false;
+      if (!googleReady) {
+        googleReady = loadGoogleScript().then(() => {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: handleGoogleCredential,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            context: authMode === "login" ? "signin" : "signup",
+            ux_mode: "popup"
+          });
+        });
+      }
+      await googleReady;
+      const parent = document.getElementById("gsiButtonParent");
+      parent.innerHTML = "";
+      parent.hidden = false;
+      window.google.accounts.id.renderButton(parent, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: authMode === "login" ? "signin_with" : "signup_with",
+        width: 320
+      });
+      return true;
+    }
+
+    async function handleGoogleCredential(response) {
+      showAuthErr("");
+      try {
+        const identity = Vault.decodeGoogleCredential(response.credential);
+        accountSession = await Vault.loginWithGoogleIdentity(identity);
+        authModal.hidden = true;
+        await refreshAccountChrome();
+        openProfileModal();
+      } catch (e) {
+        showAuthErr((e && e.message) || "Google sign-in failed");
+      }
+    }
+
+    async function startGoogleAuth() {
+      showAuthErr("");
+      googleClientId =
+        localStorage.getItem("look.googleClientId") || CONFIG_GOOGLE_CLIENT_ID || googleClientId || "";
+      if (!googleClientId) {
+        showAuthErr(
+          "Add a Google OAuth Web Client ID in Settings (authorized JavaScript origin: " +
+            location.origin +
+            "), then try again."
+        );
+        return;
+      }
+      try {
+        await ensureGoogle();
+        window.google.accounts.id.prompt();
+      } catch (e) {
+        showAuthErr((e && e.message) || "Google sign-in unavailable");
+      }
+    }
+
+    function resizeImageFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not read image"));
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const size = 256;
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext("2d");
+            const scale = Math.max(size / img.width, size / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+            resolve(canvas.toDataURL("image/jpeg", 0.85));
+          };
+          img.onerror = () => reject(new Error("Invalid image"));
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
     function syncSettingsForm() {
+      document.getElementById("setGoogleClientId").value = googleClientId || "";
       document.getElementById("setChartWeeks").value = String(userSettings.chartWeeks);
       document.getElementById("setPlanTone").value = userSettings.planTone;
       document.getElementById("setTipDetail").value = userSettings.tipDetail;
@@ -2503,6 +2948,16 @@
     }
 
     function readSettingsForm() {
+      const gid = document.getElementById("setGoogleClientId").value.trim();
+      if (gid) {
+        localStorage.setItem("look.googleClientId", gid);
+        googleClientId = gid;
+        googleReady = null;
+      } else {
+        localStorage.removeItem("look.googleClientId");
+        googleClientId = CONFIG_GOOGLE_CLIENT_ID || "";
+        googleReady = null;
+      }
       return {
         chartWeeks: Number(document.getElementById("setChartWeeks").value) || 4,
         planTone: document.getElementById("setPlanTone").value,
@@ -2525,7 +2980,6 @@
       chartWeeks = userSettings.chartWeeks;
       const plan = loadPlan();
       if (plan) {
-        // Rebuild narrative/tone from last locked metrics when voice changes
         const rebuilt = buildPersonalPlan({
           score: plan.score,
           sym: plan.sym,
@@ -2545,25 +2999,60 @@
     }
 
     function openSettingsModal() {
-      accountModal.hidden = true;
+      authModal.hidden = true;
+      profileModal.hidden = true;
       syncSettingsForm();
       settingsModal.hidden = false;
     }
 
-    accountBtn.addEventListener("click", openAccountModal);
-    if (accountBtnResults) accountBtnResults.addEventListener("click", openAccountModal);
+    loginBtn.addEventListener("click", openLogin);
+    signupBtn.addEventListener("click", openSignup);
+    if (loginBtnResults) loginBtnResults.addEventListener("click", openLogin);
+    if (signupBtnResults) signupBtnResults.addEventListener("click", openSignup);
+    profileBtn.addEventListener("click", openProfileModal);
+    if (profileBtnResults) profileBtnResults.addEventListener("click", openProfileModal);
     settingsBtn.addEventListener("click", openSettingsModal);
     if (settingsBtnResults) settingsBtnResults.addEventListener("click", openSettingsModal);
-    accountOpenSettings.addEventListener("click", openSettingsModal);
-    accountCancel.addEventListener("click", () => {
-      accountModal.hidden = true;
+
+    document.getElementById("authCancel").addEventListener("click", () => {
+      authModal.hidden = true;
     });
-    accountLock.addEventListener("click", () => {
+    document.getElementById("authSwitch").addEventListener("click", () => {
+      configureAuthModal(authMode === "login" ? "signup" : "login");
+    });
+    document.getElementById("googleAuthBtn").addEventListener("click", startGoogleAuth);
+    document.getElementById("authSubmit").addEventListener("click", async () => {
+      showAuthErr("");
+      try {
+        if (authMode === "signup") {
+          const name = document.getElementById("accName").value;
+          const p1 = document.getElementById("accPass").value;
+          const p2 = document.getElementById("accPass2").value;
+          if (p1 !== p2) throw new Error("Passphrases do not match.");
+          accountSession = await Vault.createVault(name, p1);
+        } else {
+          const p = document.getElementById("accUnlock").value;
+          accountSession = await Vault.unlockVault(p);
+        }
+        authModal.hidden = true;
+        await refreshAccountChrome();
+        openProfileModal();
+      } catch (e) {
+        showAuthErr((e && e.message) || "Could not sign in");
+      }
+    });
+
+    document.getElementById("profileCancel").addEventListener("click", () => {
+      profileModal.hidden = true;
+    });
+    document.getElementById("profileOpenSettings").addEventListener("click", openSettingsModal);
+    document.getElementById("profileSignOut").addEventListener("click", () => {
       accountSession = null;
-      accountModal.hidden = true;
+      profileModal.hidden = true;
+      document.documentElement.style.setProperty("--mint", "#5ef0a8");
       refreshAccountChrome();
     });
-    accountExport.addEventListener("click", async () => {
+    document.getElementById("profileExport").addEventListener("click", async () => {
       try {
         const blob = new Blob([JSON.stringify(await Vault.exportEncryptedBackup(), null, 2)], {
           type: "application/json"
@@ -2575,27 +3064,45 @@
         a.click();
         URL.revokeObjectURL(url);
       } catch (e) {
-        showAccountErr((e && e.message) || "Export failed");
+        showProfileErr((e && e.message) || "Export failed");
       }
     });
-    accountSubmit.addEventListener("click", async () => {
-      showAccountErr("");
+    document.getElementById("profileAvatarEdit").addEventListener("click", () => {
+      document.getElementById("profileAvatarInput").click();
+    });
+    document.getElementById("profileAvatarInput").addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file || !accountSession) return;
+      showProfileErr("");
       try {
-        const exists = await Vault.vaultExists();
-        if (!exists) {
-          const name = document.getElementById("accName").value;
-          const p1 = document.getElementById("accPass").value;
-          const p2 = document.getElementById("accPass2").value;
-          if (p1 !== p2) throw new Error("Passphrases do not match.");
-          accountSession = await Vault.createVault(name, p1);
-        } else {
-          const p = document.getElementById("accUnlock").value;
-          accountSession = await Vault.unlockVault(p);
-        }
-        accountModal.hidden = true;
+        const dataUrl = await resizeImageFile(file);
+        accountSession.profile.avatarDataUrl = dataUrl;
+        fillProfileForm();
+      } catch (err) {
+        showProfileErr((err && err.message) || "Could not update photo");
+      }
+    });
+    document.getElementById("profileSave").addEventListener("click", async () => {
+      if (!accountSession) return;
+      showProfileErr("");
+      try {
+        const next = {
+          ...accountSession.profile,
+          displayName: document.getElementById("profName").value,
+          pronouns: document.getElementById("profPronouns").value,
+          bio: document.getElementById("profBio").value,
+          goal: document.getElementById("profGoal").value,
+          location: document.getElementById("profLocation").value,
+          website: document.getElementById("profWebsite").value,
+          accent: document.getElementById("profAccent").value
+        };
+        accountSession.profile = await Vault.saveProfile(accountSession.key, next);
+        accountSession.displayName = accountSession.profile.displayName;
+        applyProfileAccent(accountSession.profile);
         await refreshAccountChrome();
+        profileModal.hidden = true;
       } catch (e) {
-        showAccountErr((e && e.message) || "Could not open account");
+        showProfileErr((e && e.message) || "Could not save profile");
       }
     });
 
@@ -2613,9 +3120,12 @@
       commitSettings(userSettings);
     });
 
-    // Live preview while tweaking toggles
     settingsModal.addEventListener("change", (e) => {
       if (!e.target.closest("#settingsModal")) return;
+      if (e.target.id === "setGoogleClientId") {
+        readSettingsForm();
+        return;
+      }
       commitSettings();
       syncSettingsForm();
     });
@@ -2623,8 +3133,8 @@
     saveAccountBtn.addEventListener("click", async () => {
       if (!activePlan) return;
       if (!accountSession) {
-        openAccountModal();
-        showAccountErr("Unlock or create an Account to save this result on-device.");
+        openLogin();
+        showAuthErr("Log in or sign up to save this result on-device.");
         return;
       }
       try {
@@ -3055,7 +3565,7 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=8")
+        .register("./sw.js?v=9")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
