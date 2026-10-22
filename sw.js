@@ -1,5 +1,5 @@
 /* LOOK offline shell — network-first for app, cache CDN/models as opaque OK. */
-const CACHE = "look-v1";
+const CACHE = "look-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./samples/demo-face.jpg"];
 
 self.addEventListener("install", (event) => {
