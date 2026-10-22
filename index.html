@@ -1584,18 +1584,30 @@
         Continue with Google
       </button>
       <div class="gsi-parent" id="gsiButtonParent" hidden></div>
-      <div class="auth-divider">or use a passphrase</div>
+      <div id="googleSetup" hidden>
+        <label for="googleClientIdInput">Google Web Client ID</label>
+        <input id="googleClientIdInput" autocomplete="off" spellcheck="false" placeholder="123456789-abc.apps.googleusercontent.com">
+        <p class="privacy" style="margin:8px 0 0">
+          Create an OAuth <strong>Web application</strong> client in Google Cloud Console.
+          Authorized JavaScript origin: <strong id="googleOriginHint">this site</strong>.
+          Then tap Continue with Google again.
+        </p>
+        <div class="modal-actions" style="margin-top:12px">
+          <button type="button" id="googleClientIdSave">Save &amp; continue</button>
+        </div>
+      </div>
+      <div class="auth-divider">or use a password</div>
 
       <div id="authSignupFields">
         <label for="accName">Display name</label>
         <input id="accName" autocomplete="nickname" maxlength="40" placeholder="e.g. Alex">
-        <label for="accPass">Passphrase (min 8)</label>
+        <label for="accPass">Password (min 8)</label>
         <input id="accPass" type="password" autocomplete="new-password" placeholder="••••••••">
-        <label for="accPass2">Confirm passphrase</label>
+        <label for="accPass2">Confirm password</label>
         <input id="accPass2" type="password" autocomplete="new-password" placeholder="••••••••">
       </div>
       <div id="authLoginFields" hidden>
-        <label for="accUnlock">Passphrase for <span id="accUnlockName">your account</span></label>
+        <label for="accUnlock">Password for <span id="accUnlockName">your account</span></label>
         <input id="accUnlock" type="password" autocomplete="current-password" placeholder="••••••••">
       </div>
       <p class="err" id="authErr" hidden></p>
@@ -1656,14 +1668,6 @@
     <div class="modal modal-wide" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
       <h2 id="settingsModalTitle">Settings</h2>
       <p class="privacy">Customize how LOOK presents scores, plans, and the scan. Preferences stay on this device — they are not uploaded.</p>
-
-      <div class="setting-row">
-        <div class="setting-copy">
-          <strong>Google Client ID</strong>
-          <span>OAuth Web client ID for Continue with Google (authorized origin: this site).</span>
-        </div>
-        <input id="setGoogleClientId" style="min-width:9rem;max-width:11rem;min-height:40px;padding:8px 10px;border:0;background:var(--ink);color:var(--foam);font:500 0.75rem Figtree,sans-serif;box-shadow:inset 0 0 0 1px var(--line)" placeholder="xxxxx.apps.googleusercontent.com" autocomplete="off">
-      </div>
 
       <div class="setting-row">
         <div class="setting-copy">
@@ -1804,10 +1808,17 @@
       "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
     let userSettings = Settings.applyDocumentSettings(Settings.loadSettings());
-    let googleClientId =
-      localStorage.getItem("look.googleClientId") || CONFIG_GOOGLE_CLIENT_ID || "";
+    let googleClientId = (CONFIG_GOOGLE_CLIENT_ID || "").trim();
     let googleReady = null;
+    let googleTokenClient = null;
     let authMode = "signup"; // signup | login
+
+    function resolveGoogleClientId() {
+      // Baked config first; optional local override for owners testing a new client ID.
+      const local = (localStorage.getItem("look.googleClientId") || "").trim();
+      googleClientId = (CONFIG_GOOGLE_CLIENT_ID || local || "").trim();
+      return googleClientId;
+    }
 
     const L = {
       forehead: 10, chin: 152, noseTip: 1, noseBridge: 6,
@@ -2988,7 +2999,7 @@
       document.getElementById("profileProviderNote").textContent =
         accountSession.provider === "google"
           ? "Signed in with Google" + (accountSession.email ? " · " + accountSession.email : "")
-          : "Passphrase account · on this device only";
+          : "Password account · on this device only";
       const src = avatarSrc(p);
       paintAvatarButton(
         document.getElementById("profileAvatarEdit"),
@@ -3012,7 +3023,12 @@
 
     function loadGoogleScript() {
       return new Promise((resolve, reject) => {
-        if (window.google && window.google.accounts && window.google.accounts.id) {
+        if (
+          window.google &&
+          window.google.accounts &&
+          window.google.accounts.id &&
+          window.google.accounts.oauth2
+        ) {
           resolve();
           return;
         }
@@ -3033,10 +3049,15 @@
       });
     }
 
+    async function finishGoogleIdentity(identity) {
+      accountSession = await Vault.loginWithGoogleIdentity(identity);
+      authModal.hidden = true;
+      await refreshAccountChrome();
+      openProfileModal();
+    }
+
     async function ensureGoogle() {
-      googleClientId =
-        localStorage.getItem("look.googleClientId") || CONFIG_GOOGLE_CLIENT_ID || googleClientId || "";
-      if (!googleClientId) return false;
+      if (!resolveGoogleClientId()) return false;
       if (!googleReady) {
         googleReady = loadGoogleScript().then(() => {
           window.google.accounts.id.initialize({
@@ -3045,21 +3066,57 @@
             auto_select: false,
             cancel_on_tap_outside: true,
             context: authMode === "login" ? "signin" : "signup",
-            ux_mode: "popup"
+            use_fedcm_for_prompt: true
+          });
+          googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: googleClientId,
+            scope: "openid email profile",
+            callback: async (tokenResponse) => {
+              showAuthErr("");
+              if (tokenResponse && tokenResponse.error) {
+                showAuthErr(tokenResponse.error_description || tokenResponse.error || "Google sign-in cancelled");
+                return;
+              }
+              try {
+                const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                  headers: { Authorization: "Bearer " + tokenResponse.access_token }
+                });
+                if (!res.ok) throw new Error("Could not load Google profile");
+                const profile = await res.json();
+                await finishGoogleIdentity({
+                  sub: profile.sub,
+                  email: profile.email || "",
+                  name: profile.name || profile.given_name || "",
+                  picture: profile.picture || "",
+                  emailVerified: !!profile.email_verified
+                });
+              } catch (e) {
+                showAuthErr((e && e.message) || "Google sign-in failed");
+              }
+            },
+            error_callback: (err) => {
+              if (err && err.type === "popup_closed") {
+                showAuthErr("Google sign-in window was closed.");
+                return;
+              }
+              showAuthErr((err && (err.message || err.type)) || "Google sign-in unavailable");
+            }
           });
         });
       }
       await googleReady;
       const parent = document.getElementById("gsiButtonParent");
-      parent.innerHTML = "";
-      parent.hidden = false;
-      window.google.accounts.id.renderButton(parent, {
-        theme: "outline",
-        size: "large",
-        shape: "pill",
-        text: authMode === "login" ? "signin_with" : "signup_with",
-        width: 320
-      });
+      if (parent) {
+        parent.innerHTML = "";
+        parent.hidden = false;
+        window.google.accounts.id.renderButton(parent, {
+          theme: "outline",
+          size: "large",
+          shape: "pill",
+          text: authMode === "login" ? "signin_with" : "signup_with",
+          width: Math.min(320, Math.floor(parent.clientWidth || 280))
+        });
+      }
       return true;
     }
 
@@ -3067,34 +3124,60 @@
       showAuthErr("");
       try {
         const identity = Vault.decodeGoogleCredential(response.credential);
-        accountSession = await Vault.loginWithGoogleIdentity(identity);
-        authModal.hidden = true;
-        await refreshAccountChrome();
-        openProfileModal();
+        await finishGoogleIdentity(identity);
       } catch (e) {
         showAuthErr((e && e.message) || "Google sign-in failed");
       }
     }
 
+    function showGoogleSetup(show) {
+      const box = document.getElementById("googleSetup");
+      if (!box) return;
+      box.hidden = !show;
+      if (show) {
+        document.getElementById("googleOriginHint").textContent = location.origin;
+        const input = document.getElementById("googleClientIdInput");
+        input.value = resolveGoogleClientId() || "";
+        input.focus();
+      }
+    }
+
     async function startGoogleAuth() {
       showAuthErr("");
-      googleClientId =
-        localStorage.getItem("look.googleClientId") || CONFIG_GOOGLE_CLIENT_ID || googleClientId || "";
-      if (!googleClientId) {
-        showAuthErr(
-          "Add a Google OAuth Web Client ID in Settings (authorized JavaScript origin: " +
-            location.origin +
-            "), then try again."
-        );
+      if (!resolveGoogleClientId()) {
+        showGoogleSetup(true);
+        showAuthErr("Paste your Google OAuth Web Client ID below, then continue.");
         return;
       }
+      showGoogleSetup(false);
       try {
+        googleReady = null;
+        googleTokenClient = null;
         await ensureGoogle();
+        if (googleTokenClient) {
+          googleTokenClient.requestAccessToken({ prompt: "consent" });
+          return;
+        }
         window.google.accounts.id.prompt();
       } catch (e) {
         showAuthErr((e && e.message) || "Google sign-in unavailable");
       }
     }
+
+    document.getElementById("googleClientIdSave").addEventListener("click", async () => {
+      const raw = document.getElementById("googleClientIdInput").value.trim();
+      if (!raw || !raw.includes(".apps.googleusercontent.com")) {
+        showAuthErr("Enter a valid Google Web Client ID ending in .apps.googleusercontent.com");
+        return;
+      }
+      localStorage.setItem("look.googleClientId", raw);
+      googleClientId = raw;
+      googleReady = null;
+      googleTokenClient = null;
+      showGoogleSetup(false);
+      showAuthErr("");
+      await startGoogleAuth();
+    });
 
     function resizeImageFile(file) {
       return new Promise((resolve, reject) => {
@@ -3122,7 +3205,6 @@
     }
 
     function syncSettingsForm() {
-      document.getElementById("setGoogleClientId").value = googleClientId || "";
       document.getElementById("setChartWeeks").value = String(userSettings.chartWeeks);
       document.getElementById("setPlanTone").value = userSettings.planTone;
       document.getElementById("setTipDetail").value = userSettings.tipDetail;
@@ -3139,16 +3221,6 @@
     }
 
     function readSettingsForm() {
-      const gid = document.getElementById("setGoogleClientId").value.trim();
-      if (gid) {
-        localStorage.setItem("look.googleClientId", gid);
-        googleClientId = gid;
-        googleReady = null;
-      } else {
-        localStorage.removeItem("look.googleClientId");
-        googleClientId = CONFIG_GOOGLE_CLIENT_ID || "";
-        googleReady = null;
-      }
       return {
         chartWeeks: Number(document.getElementById("setChartWeeks").value) || 4,
         planTone: document.getElementById("setPlanTone").value,
@@ -3222,7 +3294,7 @@
           const name = document.getElementById("accName").value;
           const p1 = document.getElementById("accPass").value;
           const p2 = document.getElementById("accPass2").value;
-          if (p1 !== p2) throw new Error("Passphrases do not match.");
+          if (p1 !== p2) throw new Error("Passwords do not match.");
           accountSession = await Vault.createVault(name, p1);
         } else {
           const p = document.getElementById("accUnlock").value;
@@ -3316,10 +3388,6 @@
 
     settingsModal.addEventListener("change", (e) => {
       if (!e.target.closest("#settingsModal")) return;
-      if (e.target.id === "setGoogleClientId") {
-        readSettingsForm();
-        return;
-      }
       commitSettings();
       syncSettingsForm();
     });
@@ -3806,7 +3874,7 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=11")
+        .register("./sw.js?v=12")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
