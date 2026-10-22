@@ -312,6 +312,8 @@ export async function saveScan(key, plan) {
     harm: plan.harm,
     smile: plan.smile,
     label: plan.label,
+    tier: plan.tier,
+    tierLabel: plan.tierLabel,
     summary: plan.summary,
     narrative: plan.narrative,
     focuses: plan.focuses,
