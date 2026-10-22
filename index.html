@@ -212,6 +212,7 @@
     }
 
     .results-bar .brand { font-size: clamp(1.8rem, 7vw, 2.6rem); }
+    .results-bar .hero-tools { margin-left: auto; }
 
     .results-hero {
       text-align: center;
@@ -448,13 +449,34 @@
       color: rgba(232, 245, 239, 0.38);
     }
 
-    /* Account */
-    .account-chip {
-      margin: 0 0 0 auto;
+    /* Account + settings */
+    .hero-tools {
+      margin-left: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .account-chip,
+    .settings-chip {
+      margin: 0;
       min-height: 40px;
       padding: 8px 12px;
       font-size: 0.8rem;
     }
+
+    body.hide-products .product-list { display: none !important; }
+    body.hide-citations .cite { display: none !important; }
+    body.hide-foundation #foundation { display: none !important; }
+    body.hide-graph .graph-block { display: none !important; }
+    body.reduce-motion *,
+    body.reduce-motion *::before,
+    body.reduce-motion *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    body.compact-plan .product-list li:nth-child(n + 2) { display: none; }
 
     .modal-backdrop {
       position: fixed;
@@ -464,16 +486,126 @@
       display: grid;
       place-items: center;
       padding: 20px;
+      overflow-y: auto;
     }
 
     .modal-backdrop[hidden] { display: none !important; }
 
     .modal {
       width: min(100%, 26rem);
+      max-height: min(92dvh, 40rem);
+      overflow-y: auto;
       background: var(--ink-2);
       box-shadow: inset 0 0 0 1px var(--line);
       padding: 22px 20px;
       animation: brandIn 0.45s var(--ease) both;
+    }
+
+    .modal.modal-wide { width: min(100%, 28rem); }
+
+    .setting-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .setting-row:first-of-type { border-top: 0; padding-top: 0; }
+
+    .setting-row .setting-copy {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .setting-row strong {
+      display: block;
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .setting-row span {
+      display: block;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: rgba(232, 245, 239, 0.55);
+    }
+
+    .setting-row select {
+      min-height: 40px;
+      min-width: 7.5rem;
+      padding: 8px 10px;
+      border: 0;
+      background: var(--ink);
+      color: var(--foam);
+      font: 500 0.9rem Figtree, sans-serif;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .switch i {
+      position: absolute;
+      inset: 0;
+      background: rgba(232, 245, 239, 0.12);
+      box-shadow: inset 0 0 0 1px var(--line);
+      transition: background 0.2s var(--ease);
+      cursor: pointer;
+    }
+
+    .switch i::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: var(--foam);
+      transition: transform 0.2s var(--ease);
+    }
+
+    .switch input:checked + i { background: rgba(94, 240, 168, 0.35); }
+    .switch input:checked + i::after {
+      transform: translateX(20px);
+      background: var(--mint);
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 0 0 14px;
+    }
+
+    .modal-tabs button {
+      flex: 1;
+      min-height: 40px;
+      font-size: 0.82rem;
+      background: transparent;
+      color: rgba(232, 245, 239, 0.65);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .modal-tabs button[aria-selected="true"] {
+      background: rgba(94, 240, 168, 0.14);
+      color: var(--foam);
+      box-shadow: inset 0 0 0 1px rgba(94, 240, 168, 0.45);
     }
 
     .modal h2 {
@@ -937,14 +1069,17 @@
     <div class="home-hero">
       <div style="display:flex;align-items:flex-start;gap:12px;width:100%">
         <h1 class="brand">LOOK</h1>
-        <button type="button" class="ghost account-chip" id="accountBtn">Account</button>
+        <div class="hero-tools">
+          <button type="button" class="ghost settings-chip" id="settingsBtn">Settings</button>
+          <button type="button" class="ghost account-chip" id="accountBtn">Account</button>
+        </div>
       </div>
       <p class="home-lead">Scan → score → improvement graph → a day-by-day plan with products and ingredients matched to your read.</p>
       <div class="home-cta">
         <button type="button" id="goScanBtn">Scan my face</button>
         <button type="button" class="ghost" id="goTipsBtn">Last results</button>
       </div>
-      <p class="build-stamp" id="buildStamp">On-device vault · no face uploads</p>
+      <p class="build-stamp" id="buildStamp">On-device account · no face uploads</p>
       <p id="accountStatus" class="build-stamp" style="text-transform:none;letter-spacing:0.02em"></p>
     </div>
 
@@ -1039,7 +1174,10 @@
     <div class="results-bar">
       <button type="button" class="ghost back-btn" id="resultsBackBtn">← Back</button>
       <h1 class="brand">LOOK</h1>
-      <button type="button" class="ghost account-chip" id="accountBtnResults">Account</button>
+      <div class="hero-tools">
+        <button type="button" class="ghost settings-chip" id="settingsBtnResults">Settings</button>
+        <button type="button" class="ghost account-chip" id="accountBtnResults">Account</button>
+      </div>
     </div>
 
     <div class="results-hero">
@@ -1083,22 +1221,22 @@
       <h2 id="results-routine-title">Your 7-day plan</h2>
       <p id="resultsRoutineLead">Each day expands with steps, product types, and ingredients.</p>
       <div id="resultsRoutineList"></div>
-      <p class="disclaimer">Projections and product ideas are educational, not medical advice or prescriptions. Patch-test actives; ask a clinician before retinoids/acids if you are pregnant, on meds, or have reactive skin. LOOK never uploads your face or scores — vault data stays encrypted on this device.</p>
+      <p class="disclaimer">Projections and product ideas are educational, not medical advice or prescriptions. Patch-test actives; ask a clinician before retinoids/acids if you are pregnant, on meds, or have reactive skin. LOOK never uploads your face or scores — account data stays encrypted on this device.</p>
       <div class="home-cta" style="margin-top:18px">
         <button type="button" id="rescanBtn">Scan again</button>
-        <button type="button" class="ghost" id="saveVaultBtn">Save to vault</button>
+        <button type="button" class="ghost" id="saveAccountBtn">Save to account</button>
         <button type="button" class="ghost" id="resultsHomeBtn">Home</button>
       </div>
     </section>
   </div>
 
   <div class="modal-backdrop" id="accountModal" hidden>
-    <div class="modal" role="dialog" aria-labelledby="accountModalTitle">
-      <h2 id="accountModalTitle">On-device account</h2>
+    <div class="modal" role="dialog" aria-labelledby="accountModalTitle" aria-modal="true">
+      <h2 id="accountModalTitle">Account</h2>
       <p class="privacy">
-        LOOK uses a <strong>local vault</strong>: display name + passphrase stay on this browser.
+        Your <strong>Account</strong> lives only on this device: display name + passphrase stay in the browser.
         Scores are encrypted with a key derived from your passphrase (PBKDF2 + AES-GCM).
-        <strong>No email, no cloud login, no face images stored or uploaded</strong> — designed to avoid shipping biometric-adjacent data to a server.
+        <strong>No email, no cloud login, no face images stored or uploaded.</strong>
       </p>
       <div id="accountCreate">
         <label for="accName">Display name</label>
@@ -1109,15 +1247,149 @@
         <input id="accPass2" type="password" autocomplete="new-password" placeholder="••••••••">
       </div>
       <div id="accountUnlock" hidden>
-        <label for="accUnlock">Passphrase for <span id="accUnlockName">your vault</span></label>
+        <label for="accUnlock">Passphrase for <span id="accUnlockName">your account</span></label>
         <input id="accUnlock" type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div id="accountOpen" hidden>
+        <p class="privacy" style="margin:0">Unlocked on this device. Save results from a scan, reopen history on Home, or open Settings to customize LOOK.</p>
       </div>
       <p class="err" id="accountErr" hidden></p>
       <div class="modal-actions">
-        <button type="button" id="accountSubmit">Create vault</button>
-        <button type="button" class="ghost" id="accountCancel">Cancel</button>
+        <button type="button" id="accountSubmit">Create account</button>
+        <button type="button" class="ghost" id="accountOpenSettings" hidden>Settings</button>
+        <button type="button" class="ghost" id="accountCancel">Close</button>
         <button type="button" class="ghost" id="accountExport" hidden>Export backup</button>
-        <button type="button" class="ghost" id="accountLock" hidden>Lock vault</button>
+        <button type="button" class="ghost" id="accountLock" hidden>Lock account</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModal" hidden>
+    <div class="modal modal-wide" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
+      <h2 id="settingsModalTitle">Settings</h2>
+      <p class="privacy">Customize how LOOK presents scores, plans, and the scan. Preferences stay on this device — they are not uploaded.</p>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Default projection window</strong>
+          <span>Starting tab on the improvement graph after a scan.</span>
+        </div>
+        <select id="setChartWeeks" aria-label="Default projection weeks">
+          <option value="2">2 weeks</option>
+          <option value="4">4 weeks</option>
+          <option value="12">12 weeks</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Plan voice</strong>
+          <span>Coach is warmer; clinical is more measured and sparse.</span>
+        </div>
+        <select id="setPlanTone" aria-label="Plan voice">
+          <option value="coach">Coach</option>
+          <option value="clinical">Clinical</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Tip detail</strong>
+          <span>Brief shortens focus-area copy; full keeps the research-style writeups.</span>
+        </div>
+        <select id="setTipDetail" aria-label="Tip detail">
+          <option value="full">Full</option>
+          <option value="brief">Brief</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Score decimals</strong>
+          <span>Whole numbers or one decimal place on locked scores.</span>
+        </div>
+        <select id="setScoreDecimals" aria-label="Score decimals">
+          <option value="1">6.0 style</option>
+          <option value="0">6 style</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Product recommendations</strong>
+          <span>Show product types and “look for” ingredients in tips and daily plans.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setShowProducts"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Compact product lists</strong>
+          <span>Show only the top product per tip or day.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setCompactPlan"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Research citations</strong>
+          <span>Show citation lines under focus tips.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setShowCitations"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Improvement graph</strong>
+          <span>Show the projected climb chart on results.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setShowGraph"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Auto-expand first plan rows</strong>
+          <span>Open the first tip and first day when results load.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setAutoExpand"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Face mesh overlay</strong>
+          <span>Draw landmark mesh while scanning.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setShowMesh"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Reduce motion</strong>
+          <span>Turn off entrance animations and transitions.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setReduceMotion"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>“Why these levers” section</strong>
+          <span>Show the educational foundation block on Home.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setShowFoundation"><i></i></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-copy">
+          <strong>Auto-save to Account</strong>
+          <span>When Account is unlocked, save each locked score automatically.</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="setAutoSave"><i></i></label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="settingsSave">Done</button>
+        <button type="button" class="ghost" id="settingsReset">Reset defaults</button>
+        <button type="button" class="ghost" id="settingsCancel">Close</button>
       </div>
     </div>
   </div>
@@ -1128,10 +1400,13 @@
       FilesetResolver
     } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.17/+esm";
     import * as Vault from "./vault.js";
+    import * as Settings from "./settings.js";
 
     const MP_WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.17/wasm";
     const MODEL =
       "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+
+    let userSettings = Settings.applyDocumentSettings(Settings.loadSettings());
 
     const L = {
       forehead: 10, chin: 152, noseTip: 1, noseBridge: 6,
@@ -1174,7 +1449,7 @@
     const resBarProp = document.getElementById("resBarProp");
     const resBarHarm = document.getElementById("resBarHarm");
     const PLAN_KEY = "look.personalPlan.v3";
-    let vaultSession = null; // { displayName, key }
+    let accountSession = null; // { displayName, key } — on-device Account
 
     const video = document.getElementById("cam");
     const canvas = document.getElementById("mesh");
@@ -1203,7 +1478,7 @@
     let mode = "live";
     let runningMode = "VIDEO";
     let view = "home";
-    let chartWeeks = 4;
+    let chartWeeks = userSettings.chartWeeks || 4;
     let activePlan = null;
 
     const TIP_BANK = {
@@ -1467,18 +1742,35 @@
           "Same room light, eye-level camera, soft smile. Compare symmetry / proportion / harmony bars — not just the headline number."
       });
 
+      const tone = userSettings.planTone === "clinical" ? "clinical" : "coach";
       let summary =
-        "We ranked habits by your weakest bars. Stick to the routine, then re-scan in the same light.";
-      if (score >= 8) summary = "Strong baseline — your plan protects sleep, skin, and grooming so the curve stays high.";
-      else if (weakHarm && !weakSym && !weakProp) summary = "Geometry is decent; expression and polish move your score fastest.";
-      else if (weakSym && weakProp) summary = "Recovery + framing + body composition are your top levers.";
+        tone === "clinical"
+          ? "Prioritized interventions map to your lowest landmark-derived bars. Reassess under matched lighting."
+          : "We ranked habits by your weakest bars. Stick to the routine, then re-scan in the same light.";
+      if (score >= 8) {
+        summary =
+          tone === "clinical"
+            ? "High baseline; maintenance emphasis on sleep regularity, photoprotection, and grooming consistency."
+            : "Strong baseline — your plan protects sleep, skin, and grooming so the curve stays high.";
+      } else if (weakHarm && !weakSym && !weakProp) {
+        summary =
+          tone === "clinical"
+            ? "Geometric indices are adequate; expression and surface polish have the highest near-term elasticity."
+            : "Geometry is decent; expression and polish move your score fastest.";
+      } else if (weakSym && weakProp) {
+        summary =
+          tone === "clinical"
+            ? "Primary constraints: recovery-linked asymmetry cues and proportion / adiposity markers."
+            : "Recovery + framing + body composition are your top levers.";
+      }
 
+      const scoreTxt = Settings.formatScore(score, userSettings.scoreDecimals);
       const narrative =
-        "Today’s locked read is <strong>" +
-        score.toFixed(1) +
+        (tone === "clinical" ? "Locked assessment: <strong>" : "Today’s locked read is <strong>") +
+        scoreTxt +
         "</strong> (" +
         (result.label || "your look") +
-        "). Symmetry sits at <strong>" +
+        "). Symmetry <strong>" +
         Math.round(sym * 100) +
         "%</strong>, proportion <strong>" +
         Math.round(prop * 100) +
@@ -1486,20 +1778,36 @@
         Math.round(harm * 100) +
         "%</strong>" +
         (smile < 0.25
-          ? ", with a low smile signal — meaning warmth is underused."
+          ? tone === "clinical"
+            ? "; smile / expression signal is low."
+            : ", with a low smile signal — meaning warmth is underused."
           : smile > 0.45
-            ? ", and your smile is already helping harmony."
+            ? tone === "clinical"
+              ? "; smile signal supports harmony."
+              : ", and your smile is already helping harmony."
             : ".") +
         " " +
         (weakSym
-          ? "Asymmetry-sensitive cues (sleep, puff, uneven light) are your first constraint. "
-          : "Symmetry is relatively stable, so we will not over-rotate on “fixing bone.” ") +
+          ? tone === "clinical"
+            ? "Asymmetry-sensitive covariates (sleep debt, fluid retention, uneven illumination) dominate. "
+            : "Asymmetry-sensitive cues (sleep, puff, uneven light) are your first constraint. "
+          : tone === "clinical"
+            ? "Symmetry is stable relative to peers in this capture. "
+            : "Symmetry is relatively stable, so we will not over-rotate on “fixing bone.” ") +
         (weakProp
-          ? "Proportion has room: silhouette grooming and body-composition habits matter more than new contour gadgets. "
-          : "Proportion is holding — keep framing consistent when you re-scan. ") +
+          ? tone === "clinical"
+            ? "Proportion index suggests silhouette and body-composition levers over contour devices. "
+            : "Proportion has room: silhouette grooming and body-composition habits matter more than new contour gadgets. "
+          : tone === "clinical"
+            ? "Proportion is within a favorable band — hold framing constant on retest. "
+            : "Proportion is holding — keep framing consistent when you re-scan. ") +
         (weakHarm
-          ? "Harmony is the open door: expression, lips, and polish can move the number this week without changing structure."
-          : "Harmony is solid — protect it with SPF and a natural smile on lock-in.");
+          ? tone === "clinical"
+            ? "Harmony remains the most plastic short-horizon domain (expression, lip condition, polish)."
+            : "Harmony is the open door: expression, lips, and polish can move the number this week without changing structure."
+          : tone === "clinical"
+            ? "Harmony is adequate — maintain photoprotection and natural expression at lock-in."
+            : "Harmony is solid — protect it with SPF and a natural smile on lock-in.");
 
       // Controllable headroom (honest caps — not surgery/filters)
       const fast =
@@ -1702,11 +2010,11 @@
         "In " +
         weeks +
         " weeks: <em>" +
-        plan.score.toFixed(1) +
+        Settings.formatScore(plan.score, userSettings.scoreDecimals) +
         " → " +
-        last.toFixed(1) +
+        Settings.formatScore(last, userSettings.scoreDecimals) +
         "</em> (+" +
-        delta.toFixed(1) +
+        Settings.formatScore(delta, userSettings.scoreDecimals) +
         ")";
       deltaNote.textContent =
         "Modeled from your gaps — smile/sleep/grooming early, skin mid-way, fitness later. Re-scan to measure the real curve.";
@@ -1717,10 +2025,11 @@
     }
 
     function renderProducts(products) {
-      if (!products || !products.length) return "";
+      if (!userSettings.showProducts || !products || !products.length) return "";
+      const list = userSettings.compactPlan ? products.slice(0, 1) : products;
       return (
         '<ul class="product-list">' +
-        products
+        list
           .map(function (p) {
             return (
               "<li><strong>" +
@@ -1736,23 +2045,31 @@
       );
     }
 
+    function tipBodyText(t) {
+      if (userSettings.tipDetail !== "brief") return t.body;
+      const cut = t.body.split(". ");
+      return cut.slice(0, 2).join(". ") + (cut.length > 2 ? "." : "");
+    }
+
     function renderTipsInto(el, plan) {
+      const openFirst = userSettings.autoExpandPlan;
       el.innerHTML = plan.tips
         .map(function (t, i) {
           return (
             '<details class="acc"' +
-            (i === 0 ? " open" : "") +
+            (openFirst && i === 0 ? " open" : "") +
             "><summary><span>" +
             t.title +
             "</span>" +
             chevron() +
             '</summary><div class="acc-body"><p>' +
-            t.body +
+            tipBodyText(t) +
             "</p>" +
             renderProducts(t.products) +
-            '<span class="cite">' +
-            t.cite +
-            "</span></div></details>"
+            (userSettings.showCitations
+              ? '<span class="cite">' + t.cite + "</span>"
+              : "") +
+            "</div></details>"
           );
         })
         .join("");
@@ -1760,6 +2077,7 @@
 
     function renderRoutineInto(el, plan) {
       const days = plan.days || [];
+      const openFirst = userSettings.autoExpandPlan;
       if (!days.length && plan.routine) {
         el.innerHTML =
           '<ol class="routine">' +
@@ -1775,7 +2093,7 @@
         .map(function (d, i) {
           return (
             '<details class="acc"' +
-            (i === 0 ? " open" : "") +
+            (openFirst && i === 0 ? " open" : "") +
             "><summary><span>" +
             d.name +
             "</span>" +
@@ -1796,8 +2114,9 @@
             "<p><strong>Habit:</strong> " +
             d.habit +
             "</p>" +
-            "<p><strong>Products &amp; ingredients</strong></p>" +
-            renderProducts(d.products) +
+            (userSettings.showProducts
+              ? "<p><strong>Products &amp; ingredients</strong></p>" + renderProducts(d.products)
+              : "") +
             "</div></details>"
           );
         })
@@ -1816,8 +2135,8 @@
         return;
       }
 
-      const rounded = (Math.round(plan.score * 10) / 10).toFixed(1);
-      const target = plan.lift.target.toFixed(1);
+      const rounded = Settings.formatScore(plan.score, userSettings.scoreDecimals);
+      const target = Settings.formatScore(plan.lift.target, userSettings.scoreDecimals);
       personalBanner.innerHTML =
         '<p class="score-line">Last score <em>' +
         rounded +
@@ -1851,7 +2170,8 @@
 
     function fillResults(plan) {
       activePlan = plan;
-      resultsScore.textContent = (Math.round(plan.score * 10) / 10).toFixed(1);
+      chartWeeks = userSettings.chartWeeks || chartWeeks;
+      resultsScore.textContent = Settings.formatScore(plan.score, userSettings.scoreDecimals);
       resultsMeta.textContent = (plan.label || "Your look") + " · locked from scan";
       const narr = document.getElementById("resultsNarrative");
       if (narr) {
@@ -1862,13 +2182,15 @@
       renderTipsInto(resultsTipList, plan);
       resultsRoutineLead.textContent =
         "Day-by-day plan aimed at about +" +
-        plan.lift.total.toFixed(1) +
+        Settings.formatScore(plan.lift.total, userSettings.scoreDecimals) +
         " over the coming weeks if you stay consistent.";
       renderRoutineInto(resultsRoutineList, plan);
       document.querySelectorAll(".period-tabs button").forEach((btn) => {
         btn.setAttribute("aria-selected", String(Number(btn.dataset.weeks) === chartWeeks));
       });
-      requestAnimationFrame(() => drawImproveChart(plan, chartWeeks));
+      if (userSettings.showGraph) {
+        requestAnimationFrame(() => drawImproveChart(plan, chartWeeks));
+      }
       refreshAccountChrome();
     }
 
@@ -1934,7 +2256,7 @@
       window.scrollTo(0, 0);
     }
 
-    function lockAndShowResults() {
+    async function lockAndShowResults() {
       const src =
         held || {
           score: smooth.score,
@@ -1953,22 +2275,35 @@
       const plan = buildPersonalPlan(src);
       savePlan(plan);
       showResults(plan);
+      if (userSettings.autoSaveAccount && accountSession) {
+        try {
+          await Vault.saveScan(accountSession.key, plan);
+          await renderHistory();
+        } catch (_) {
+          /* non-blocking */
+        }
+      }
     }
 
     const accountModal = document.getElementById("accountModal");
+    const settingsModal = document.getElementById("settingsModal");
     const accountBtn = document.getElementById("accountBtn");
     const accountBtnResults = document.getElementById("accountBtnResults");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsBtnResults = document.getElementById("settingsBtnResults");
     const accountStatus = document.getElementById("accountStatus");
     const accountCreate = document.getElementById("accountCreate");
     const accountUnlock = document.getElementById("accountUnlock");
+    const accountOpen = document.getElementById("accountOpen");
     const accountSubmit = document.getElementById("accountSubmit");
     const accountCancel = document.getElementById("accountCancel");
     const accountExport = document.getElementById("accountExport");
     const accountLock = document.getElementById("accountLock");
+    const accountOpenSettings = document.getElementById("accountOpenSettings");
     const accountErr = document.getElementById("accountErr");
     const historySection = document.getElementById("historySection");
     const historyList = document.getElementById("historyList");
-    const saveVaultBtn = document.getElementById("saveVaultBtn");
+    const saveAccountBtn = document.getElementById("saveAccountBtn");
 
     function showAccountErr(msg) {
       if (!msg) {
@@ -1982,18 +2317,18 @@
 
     async function refreshAccountChrome() {
       const exists = await Vault.vaultExists();
-      if (vaultSession) {
-        accountStatus.textContent = "Vault unlocked · " + vaultSession.displayName + " (on-device)";
-        accountBtn.textContent = vaultSession.displayName;
-        if (accountBtnResults) accountBtnResults.textContent = vaultSession.displayName;
+      if (accountSession) {
+        accountStatus.textContent = "Account unlocked · " + accountSession.displayName + " (on-device)";
+        accountBtn.textContent = accountSession.displayName;
+        if (accountBtnResults) accountBtnResults.textContent = accountSession.displayName;
         await renderHistory();
       } else if (exists) {
-        accountStatus.textContent = "Vault locked — unlock to sync history on this device";
+        accountStatus.textContent = "Account locked — unlock to see history on this device";
         accountBtn.textContent = "Unlock";
         if (accountBtnResults) accountBtnResults.textContent = "Unlock";
         historySection.hidden = true;
       } else {
-        accountStatus.textContent = "Optional on-device vault · no email · no face uploads";
+        accountStatus.textContent = "Optional on-device Account · no email · no face uploads";
         accountBtn.textContent = "Account";
         if (accountBtnResults) accountBtnResults.textContent = "Account";
         historySection.hidden = true;
@@ -2001,14 +2336,14 @@
     }
 
     async function renderHistory() {
-      if (!vaultSession) {
+      if (!accountSession) {
         historySection.hidden = true;
         return;
       }
-      const rows = await Vault.listScans(vaultSession.key);
+      const rows = await Vault.listScans(accountSession.key);
       if (!rows.length) {
         historySection.hidden = false;
-        historyList.innerHTML = "<li>No saved scans yet — lock a score and tap Save to vault.</li>";
+        historyList.innerHTML = "<li>No saved scans yet — lock a score and tap Save to account.</li>";
         return;
       }
       historySection.hidden = false;
@@ -2024,7 +2359,7 @@
             " · " +
             (r.label || "Scan") +
             '</span><span class="h-score">' +
-            Number(r.score).toFixed(1) +
+            Settings.formatScore(r.score, userSettings.scoreDecimals) +
             "</span></li>"
           );
         })
@@ -2044,43 +2379,116 @@
     async function openAccountModal() {
       showAccountErr("");
       const exists = await Vault.vaultExists();
-      if (vaultSession) {
-        document.getElementById("accountModalTitle").textContent = "Vault unlocked";
+      if (accountSession) {
+        document.getElementById("accountModalTitle").textContent = "Account unlocked";
         accountCreate.hidden = true;
         accountUnlock.hidden = true;
+        accountOpen.hidden = false;
         accountSubmit.hidden = true;
         accountExport.hidden = false;
         accountLock.hidden = false;
+        accountOpenSettings.hidden = false;
       } else if (exists) {
-        document.getElementById("accountModalTitle").textContent = "Unlock on-device vault";
+        document.getElementById("accountModalTitle").textContent = "Unlock Account";
         accountCreate.hidden = true;
         accountUnlock.hidden = false;
+        accountOpen.hidden = true;
         accountSubmit.hidden = false;
         accountSubmit.textContent = "Unlock";
         accountExport.hidden = true;
         accountLock.hidden = true;
+        accountOpenSettings.hidden = true;
         const meta = await Vault.getVaultMeta();
         document.getElementById("accUnlockName").textContent =
-          (meta && meta.displayName) || "your vault";
+          (meta && meta.displayName) || "your account";
       } else {
-        document.getElementById("accountModalTitle").textContent = "Create on-device vault";
+        document.getElementById("accountModalTitle").textContent = "Create Account";
         accountCreate.hidden = false;
         accountUnlock.hidden = true;
+        accountOpen.hidden = true;
         accountSubmit.hidden = false;
-        accountSubmit.textContent = "Create vault";
+        accountSubmit.textContent = "Create account";
         accountExport.hidden = true;
         accountLock.hidden = true;
+        accountOpenSettings.hidden = true;
       }
       accountModal.hidden = false;
     }
 
+    function syncSettingsForm() {
+      document.getElementById("setChartWeeks").value = String(userSettings.chartWeeks);
+      document.getElementById("setPlanTone").value = userSettings.planTone;
+      document.getElementById("setTipDetail").value = userSettings.tipDetail;
+      document.getElementById("setScoreDecimals").value = String(userSettings.scoreDecimals);
+      document.getElementById("setShowProducts").checked = userSettings.showProducts;
+      document.getElementById("setCompactPlan").checked = userSettings.compactPlan;
+      document.getElementById("setShowCitations").checked = userSettings.showCitations;
+      document.getElementById("setShowGraph").checked = userSettings.showGraph;
+      document.getElementById("setAutoExpand").checked = userSettings.autoExpandPlan;
+      document.getElementById("setShowMesh").checked = userSettings.showMesh;
+      document.getElementById("setReduceMotion").checked = userSettings.reduceMotion;
+      document.getElementById("setShowFoundation").checked = userSettings.showFoundation;
+      document.getElementById("setAutoSave").checked = userSettings.autoSaveAccount;
+    }
+
+    function readSettingsForm() {
+      return {
+        chartWeeks: Number(document.getElementById("setChartWeeks").value) || 4,
+        planTone: document.getElementById("setPlanTone").value,
+        tipDetail: document.getElementById("setTipDetail").value,
+        scoreDecimals: Number(document.getElementById("setScoreDecimals").value) === 0 ? 0 : 1,
+        showProducts: document.getElementById("setShowProducts").checked,
+        compactPlan: document.getElementById("setCompactPlan").checked,
+        showCitations: document.getElementById("setShowCitations").checked,
+        showGraph: document.getElementById("setShowGraph").checked,
+        autoExpandPlan: document.getElementById("setAutoExpand").checked,
+        showMesh: document.getElementById("setShowMesh").checked,
+        reduceMotion: document.getElementById("setReduceMotion").checked,
+        showFoundation: document.getElementById("setShowFoundation").checked,
+        autoSaveAccount: document.getElementById("setAutoSave").checked
+      };
+    }
+
+    function commitSettings(partial) {
+      userSettings = Settings.applyDocumentSettings(Settings.saveSettings(partial || readSettingsForm()));
+      chartWeeks = userSettings.chartWeeks;
+      const plan = loadPlan();
+      if (plan) {
+        // Rebuild narrative/tone from last locked metrics when voice changes
+        const rebuilt = buildPersonalPlan({
+          score: plan.score,
+          sym: plan.sym,
+          prop: plan.prop,
+          harm: plan.harm,
+          smile: plan.smile || 0,
+          label: plan.label
+        });
+        rebuilt.at = plan.at || rebuilt.at;
+        savePlan(rebuilt);
+        if (view === "results") fillResults(rebuilt);
+        else renderPlan(rebuilt);
+      } else {
+        renderPlan(null);
+      }
+      return userSettings;
+    }
+
+    function openSettingsModal() {
+      accountModal.hidden = true;
+      syncSettingsForm();
+      settingsModal.hidden = false;
+    }
+
     accountBtn.addEventListener("click", openAccountModal);
     if (accountBtnResults) accountBtnResults.addEventListener("click", openAccountModal);
+    settingsBtn.addEventListener("click", openSettingsModal);
+    if (settingsBtnResults) settingsBtnResults.addEventListener("click", openSettingsModal);
+    accountOpenSettings.addEventListener("click", openSettingsModal);
     accountCancel.addEventListener("click", () => {
       accountModal.hidden = true;
     });
     accountLock.addEventListener("click", () => {
-      vaultSession = null;
+      accountSession = null;
       accountModal.hidden = true;
       refreshAccountChrome();
     });
@@ -2092,7 +2500,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "look-vault-backup.json";
+        a.download = "look-account-backup.json";
         a.click();
         URL.revokeObjectURL(url);
       } catch (e) {
@@ -2108,31 +2516,52 @@
           const p1 = document.getElementById("accPass").value;
           const p2 = document.getElementById("accPass2").value;
           if (p1 !== p2) throw new Error("Passphrases do not match.");
-          vaultSession = await Vault.createVault(name, p1);
+          accountSession = await Vault.createVault(name, p1);
         } else {
           const p = document.getElementById("accUnlock").value;
-          vaultSession = await Vault.unlockVault(p);
+          accountSession = await Vault.unlockVault(p);
         }
         accountModal.hidden = true;
         await refreshAccountChrome();
       } catch (e) {
-        showAccountErr((e && e.message) || "Could not open vault");
+        showAccountErr((e && e.message) || "Could not open account");
       }
     });
 
-    saveVaultBtn.addEventListener("click", async () => {
+    document.getElementById("settingsSave").addEventListener("click", () => {
+      commitSettings();
+      settingsModal.hidden = true;
+    });
+    document.getElementById("settingsCancel").addEventListener("click", () => {
+      settingsModal.hidden = true;
+    });
+    document.getElementById("settingsReset").addEventListener("click", () => {
+      userSettings = Settings.applyDocumentSettings(Settings.resetSettings());
+      chartWeeks = userSettings.chartWeeks;
+      syncSettingsForm();
+      commitSettings(userSettings);
+    });
+
+    // Live preview while tweaking toggles
+    settingsModal.addEventListener("change", (e) => {
+      if (!e.target.closest("#settingsModal")) return;
+      commitSettings();
+      syncSettingsForm();
+    });
+
+    saveAccountBtn.addEventListener("click", async () => {
       if (!activePlan) return;
-      if (!vaultSession) {
+      if (!accountSession) {
         openAccountModal();
-        showAccountErr("Unlock or create a vault to save this result on-device.");
+        showAccountErr("Unlock or create an Account to save this result on-device.");
         return;
       }
       try {
-        await Vault.saveScan(vaultSession.key, activePlan);
+        await Vault.saveScan(accountSession.key, activePlan);
         await renderHistory();
-        saveVaultBtn.textContent = "Saved";
+        saveAccountBtn.textContent = "Saved";
         setTimeout(() => {
-          saveVaultBtn.textContent = "Save to vault";
+          saveAccountBtn.textContent = "Save to account";
         }, 1600);
       } catch (e) {
         alert((e && e.message) || "Could not save");
@@ -2294,7 +2723,7 @@
       smooth.smile = lerp(smooth.smile || 0, result.smile || 0, t);
       const display = holdScore && held ? held : smooth;
       const rounded = Math.round(display.score * 10) / 10;
-      scoreValue.textContent = rounded.toFixed(1);
+      scoreValue.textContent = Settings.formatScore(display.score, userSettings.scoreDecimals);
       scoreMeta.textContent = holdScore ? "Held · " + (held.label || result.label) : result.label;
       scorePanel.hidden = false;
       scoreValue.classList.toggle("is-hot", rounded >= 8);
@@ -2331,7 +2760,7 @@
     function drawFrame(landmarks, frameW, frameH) {
       resizeCanvas(frameW, frameH);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!landmarks || !landmarks.length) return;
+      if (!userSettings.showMesh || !landmarks || !landmarks.length) return;
       drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_TESSELATION, "rgba(94, 240, 168, 0.2)", 0.6);
       drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_FACE_OVAL, "rgba(94, 240, 168, 0.9)", 1.6);
       drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, "#e8f5ef", 1.3);
@@ -2555,11 +2984,12 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=6")
+        .register("./sw.js?v=7")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
 
+    userSettings = Settings.applyDocumentSettings(userSettings);
     refreshAccountChrome();
     renderPlan(loadPlan());
     if (location.hash === "#scan") showScan();
