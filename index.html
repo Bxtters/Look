@@ -131,6 +131,67 @@
       color: rgba(232, 245, 239, 0.35);
     }
 
+    .personal-banner {
+      margin: 0 0 18px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .personal-banner .score-line {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      margin: 0 0 6px;
+    }
+
+    .personal-banner .score-line em {
+      font-style: normal;
+      color: var(--mint);
+    }
+
+    .personal-banner p {
+      margin: 0;
+      color: rgba(232, 245, 239, 0.65);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .focus-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 0;
+    }
+
+    .focus-chips span {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink);
+      background: var(--mint);
+      padding: 6px 10px;
+      font-weight: 700;
+      font-family: Syne, sans-serif;
+    }
+
+    .focus-chips span.dim {
+      background: transparent;
+      color: rgba(232, 245, 239, 0.55);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .tip.priority h3::before {
+      content: "For you · ";
+      color: var(--mint);
+      font-weight: 700;
+    }
+
+    .empty-plan {
+      color: rgba(232, 245, 239, 0.62);
+      line-height: 1.45;
+      margin: 0 0 12px;
+    }
+
     button {
       appearance: none;
       border: 0;
@@ -520,87 +581,48 @@
   <main id="home" class="view" aria-label="Home">
     <div class="home-hero">
       <h1 class="brand">LOOK</h1>
-      <p class="home-lead">Rate your face with on-device mocap — then use what research says actually moves the needle.</p>
+      <p class="home-lead">Scan once — LOOK builds a tip list and weekly routine from <em>your</em> symmetry, proportion, and harmony read.</p>
       <div class="home-cta">
         <button type="button" id="goScanBtn">Scan my face</button>
-        <button type="button" class="ghost" id="goTipsBtn">Tips &amp; routines</button>
+        <button type="button" class="ghost" id="goTipsBtn">My plan</button>
       </div>
-      <p class="build-stamp" id="buildStamp">Build 2026-10-22 · tips + back</p>
+      <p class="build-stamp" id="buildStamp">Build 2026-10-22 · personalized plan</p>
     </div>
 
     <section class="section" id="tips" aria-labelledby="tips-title">
-      <h2 id="tips-title">What research supports</h2>
-      <p>Bone structure is mostly fixed. Appearance ratings still shift with sleep, skin health, grooming, expression, and body composition — factors studied in psychology and dermatology.</p>
-
-      <article class="tip">
-        <h3>Sleep shows on your face</h3>
-        <p>Observers rate well-rested faces as more attractive and healthier. Short sleep increases under-eye puffiness, dullness, and droop that read as fatigue within hours.</p>
-        <span class="cite">Axelsson et al., Royal Society Open Science / sleep &amp; facial attractiveness literature</span>
-      </article>
-
-      <article class="tip">
-        <h3>Skin clarity beats contour myths</h3>
-        <p>Even skin tone and low inflammation are strong attractiveness cues across cultures. Daily broad-spectrum sunscreen, gentle cleansing, and treating acne/eczema with evidence-based care outperform unproven “face exercises.”</p>
-        <span class="cite">Dermatology consensus; Fink / Jones facial skin homogeneity studies</span>
-      </article>
-
-      <article class="tip">
-        <h3>Smile and warmth score high</h3>
-        <p>Genuine smiles raise attractiveness and approachability ratings more than a neutral face with “ideal” proportions. LOOK’s scorer already boosts mild smile blendshapes for this reason.</p>
-        <span class="cite">O’Doherty / social perception research on positive expression</span>
-      </article>
-
-      <article class="tip">
-        <h3>Grooming is high leverage</h3>
-        <p>A haircut that fits your face shape, managed brows, clean facial hair lines, and whitened/healthy teeth change ratings without changing bone. These are among the largest controllable deltas in appearance studies and consumer trials.</p>
-        <span class="cite">Grooming &amp; dental aesthetics literature; dental smile attractiveness reviews</span>
-      </article>
-
-      <article class="tip">
-        <h3>Body fat and fitness reshape the face</h3>
-        <p>Lower body fat and higher fitness often sharpen jaw/cheek definition. Resistance training plus a sustainable calorie plan affects facial adiposity more reliably than viral “mewing” claims, which lack strong clinical evidence.</p>
-        <span class="cite">Body composition &amp; facial adiposity; clinical skepticism of mewing RCTs</span>
-      </article>
-
-      <article class="tip">
-        <h3>Skip smoke, cut heavy alcohol</h3>
-        <p>Smoking accelerates skin aging (wrinkles, sallowness). Heavy alcohol dehydrates and inflames skin. Quitting is one of the best long-term face investments.</p>
-        <span class="cite">Dermatologic aging / tobacco literature</span>
-      </article>
+      <h2 id="tips-title">Your plan</h2>
+      <div id="personalBanner" class="personal-banner">
+        <p class="empty-plan" id="planEmpty">No scan yet. Hit <strong>Scan my face</strong>, then <strong>My tips</strong> on the scan screen — we’ll rank habits by what your landmarks need most.</p>
+      </div>
+      <div id="personalTips"></div>
+      <div id="focusChips" class="focus-chips" hidden></div>
     </section>
 
     <section class="section" id="routines" aria-labelledby="routines-title">
-      <h2 id="routines-title">Routines that compound</h2>
-      <p>Small daily habits beat one-off products. Adapt to your skin type and talk to a clinician before prescriptions (retinoids, acne meds).</p>
+      <h2 id="routines-title">Your routine</h2>
+      <p id="routineLead">After a scan, this becomes a 7-day checklist tuned to your weakest scores.</p>
+      <ol class="routine" id="personalRoutine"></ol>
+      <p class="disclaimer">LOOK personalizes from on-device landmark geometry (symmetry / proportion / harmony / smile). It is not a medical or beauty diagnosis. Research citations describe general evidence; adapt care to your skin and clinician advice.</p>
+    </section>
 
-      <ol class="routine">
-        <li>
-          <strong>Morning — protect</strong>
-          <span>Rinse or gentle cleanse → moisturizer → SPF 30+ every day, including cloudy days. UV is the main preventable driver of visible skin aging.</span>
-        </li>
-        <li>
-          <strong>Night — repair</strong>
-          <span>Cleanse → treatment (adapalene/retinol if tolerated, or prescribed acne care) → moisturizer. Start slow to avoid irritation that worsens redness.</span>
-        </li>
-        <li>
-          <strong>Sleep — 7–9 hours</strong>
-          <span>Fixed wake time, dim screens late, cool dark room. Re-rate your LOOK score after a week of consistent sleep — fatigue drops fast when rest returns.</span>
-        </li>
-        <li>
-          <strong>Train — 3× strength / week</strong>
-          <span>Full-body lifts plus daily walking. Face definition often follows overall fat loss and posture more than isolated facial workouts.</span>
-        </li>
-        <li>
-          <strong>Groom — weekly reset</strong>
-          <span>Trim/shape facial hair, tidy brows, clean glasses frames, fresh haircut every 3–6 weeks. Keep nails and collar lines sharp — framing matters in real photos.</span>
-        </li>
-        <li>
-          <strong>Smile practice — natural, not forced</strong>
-          <span>In photos and first meetings, a relaxed Duchenne-style smile (eyes involved) consistently outperforms a blank stare in attractiveness ratings.</span>
-        </li>
-      </ol>
-
-      <p class="disclaimer">LOOK’s 1–10 score is a geometry toy from facial landmarks — not a medical or beauty diagnosis. Tips summarize general research themes; they are not personalized medical advice.</p>
+    <section class="section" id="foundation" aria-labelledby="foundation-title">
+      <h2 id="foundation-title">Why these levers</h2>
+      <p>Bone structure is mostly fixed. Ratings still move with sleep, skin, grooming, expression, and body composition.</p>
+      <article class="tip">
+        <h3>Sleep &amp; recovery</h3>
+        <p>Well-rested faces are rated more attractive and healthier; fatigue shows in under-eyes and droop within hours.</p>
+        <span class="cite">Axelsson et al. / sleep &amp; facial attractiveness</span>
+      </article>
+      <article class="tip">
+        <h3>Skin clarity</h3>
+        <p>Even tone and low inflammation are strong cross-cultural cues — SPF and gentle care beat unproven face exercises.</p>
+        <span class="cite">Dermatology; Fink / Jones skin homogeneity</span>
+      </article>
+      <article class="tip">
+        <h3>Expression &amp; grooming</h3>
+        <p>Genuine smiles and sharp grooming change ratings without changing bone — often the largest controllable deltas.</p>
+        <span class="cite">Social perception &amp; dental aesthetics reviews</span>
+      </article>
     </section>
   </main>
 
@@ -644,6 +666,7 @@
       <div class="actions">
         <button type="button" class="ghost" id="flipBtn" disabled>Flip</button>
         <button type="button" class="ghost" id="holdBtn" disabled>Hold score</button>
+        <button type="button" id="tipsFromScanBtn" disabled>My tips</button>
       </div>
     </footer>
   </div>
@@ -677,6 +700,13 @@
     const goScanBtn = document.getElementById("goScanBtn");
     const goTipsBtn = document.getElementById("goTipsBtn");
     const backBtn = document.getElementById("backBtn");
+    const tipsFromScanBtn = document.getElementById("tipsFromScanBtn");
+    const personalBanner = document.getElementById("personalBanner");
+    const personalTips = document.getElementById("personalTips");
+    const personalRoutine = document.getElementById("personalRoutine");
+    const routineLead = document.getElementById("routineLead");
+    const focusChips = document.getElementById("focusChips");
+    const PLAN_KEY = "look.personalPlan.v1";
 
     const video = document.getElementById("cam");
     const canvas = document.getElementById("mesh");
@@ -702,10 +732,67 @@
     let lastVideoTime = -1;
     let holdScore = false;
     let held = null;
-    let smooth = { score: 5, sym: 0.5, prop: 0.5, harm: 0.5 };
+    let smooth = { score: 5, sym: 0.5, prop: 0.5, harm: 0.5, smile: 0 };
     let mode = "live";
     let runningMode = "VIDEO";
     let view = "home";
+
+    const TIP_BANK = {
+      sleep: {
+        id: "sleep",
+        title: "Prioritize 7–9 hours tonight",
+        body: "Your symmetry read is soft — fatigue and asymmetric puffiness often drag that down. Fixed wake time and a dark cool room improve how rested faces are rated within days.",
+        cite: "Sleep & facial attractiveness (Axelsson et al.)"
+      },
+      lighting: {
+        id: "lighting",
+        title: "Even front lighting when you re-scan",
+        body: "Harsh side light exaggerates asymmetry in mocap. Face a window or ring light, camera at eye level, then re-rate — same face, cleaner geometry.",
+        cite: "Imaging bias in landmark tracking"
+      },
+      smile: {
+        id: "smile",
+        title: "Lead with a soft real smile",
+        body: "Harmony rose less than it could — expression is the fastest lever. A relaxed smile that reaches the eyes lifts attractiveness and approachability ratings more than chasing “perfect” proportions.",
+        cite: "Social perception / positive expression research"
+      },
+      grooming: {
+        id: "grooming",
+        title: "Frame the face with a grooming reset",
+        body: "Proportion scores improve when hair, brows, and facial hair balance the silhouette. Book a cut that fits your face shape and tidy edges this week — high leverage, no bone change.",
+        cite: "Grooming & dental aesthetics literature"
+      },
+      fitness: {
+        id: "fitness",
+        title: "Train for face definition via body fat",
+        body: "Softer proportion / cheek balance often tracks facial adiposity. Three strength sessions plus daily walking reshape the jawline more reliably than viral facial exercises.",
+        cite: "Body composition & facial adiposity"
+      },
+      skin: {
+        id: "skin",
+        title: "SPF every morning, gentle night repair",
+        body: "Clarity and even tone punch above geometry. Broad-spectrum SPF 30+ daily and a simple night routine (cleanse → treatment → moisturizer) protect the cues people rate as healthy.",
+        cite: "Dermatology / skin homogeneity studies"
+      },
+      posture: {
+        id: "posture",
+        title: "Chin neutral, camera at eye level",
+        body: "Tilting up/down warps facial thirds in the model. Sit tall, drop shoulders, lens at eye height — cleaner proportion reads and better photos.",
+        cite: "Pose effects on facial metrics"
+      },
+      hydration: {
+        id: "hydration",
+        title: "Cut late alcohol; hydrate earlier",
+        body: "Puffiness and dullness muddy symmetry and harmony overnight. Keep alcohol lighter and finish water earlier in the evening before your next scan.",
+        cite: "Dermatologic aging / lifestyle"
+      },
+      maintain: {
+        id: "maintain",
+        title: "Protect a strong baseline",
+        body: "Your read is already solid. Double down on sleep, SPF, and weekly grooming so the score stays stable across lighting and days.",
+        cite: "Maintenance of appearance cues"
+      }
+    };
 
     function setStatus(text, tone) {
       statusEl.textContent = text || "";
@@ -713,7 +800,209 @@
       else delete statusEl.dataset.tone;
     }
 
-    function showHome() {
+    function loadPlan() {
+      try {
+        return JSON.parse(localStorage.getItem(PLAN_KEY) || "null");
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function savePlan(plan) {
+      localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+    }
+
+    function buildPersonalPlan(result) {
+      const score = result.score;
+      const sym = result.sym;
+      const prop = result.prop;
+      const harm = result.harm;
+      const smile = result.smile || 0;
+      const focuses = [];
+      const tipIds = [];
+
+      const pushFocus = (label, tipId, weak) => {
+        focuses.push({ label, weak: !!weak });
+        if (tipId && tipIds.indexOf(tipId) === -1) tipIds.push(tipId);
+      };
+
+      if (sym < 0.62) pushFocus("Symmetry", "sleep", true);
+      else pushFocus("Symmetry", null, false);
+
+      if (prop < 0.58) pushFocus("Proportion", "fitness", true);
+      else pushFocus("Proportion", null, false);
+
+      if (harm < 0.58 || smile < 0.25) pushFocus("Harmony", "smile", true);
+      else pushFocus("Harmony", null, false);
+
+      if (sym < 0.62) tipIds.push("lighting", "hydration");
+      if (prop < 0.58) tipIds.push("grooming", "posture");
+      if (harm < 0.58 || smile < 0.25) tipIds.push("smile", "grooming");
+      if (score < 6.5) tipIds.push("skin", "sleep");
+      if (score >= 7.5 && tipIds.length < 2) tipIds.push("maintain", "skin");
+
+      // Dedupe preserving order
+      const seen = {};
+      const ordered = [];
+      tipIds.forEach((id) => {
+        if (TIP_BANK[id] && !seen[id]) {
+          seen[id] = true;
+          ordered.push(id);
+        }
+      });
+      while (ordered.length < 3) {
+        ["skin", "sleep", "grooming"].forEach((id) => {
+          if (ordered.length < 4 && !seen[id]) {
+            seen[id] = true;
+            ordered.push(id);
+          }
+        });
+      }
+
+      const tips = ordered.slice(0, 4).map((id) => TIP_BANK[id]);
+
+      const routine = [];
+      const weakSym = sym < 0.62;
+      const weakProp = prop < 0.58;
+      const weakHarm = harm < 0.58 || smile < 0.25;
+
+      routine.push({
+        title: "Morning — protect",
+        detail: weakSym
+          ? "Cool splash, caffeine sparingly, SPF 30+. Extra sleep last night pays off most in the symmetry bar."
+          : "Gentle cleanse → moisturizer → SPF 30+ every day, clouds included."
+      });
+      routine.push({
+        title: "Day — posture & light",
+        detail: weakProp
+          ? "Phone/camera at eye level; walk 8–10k steps. Framing and lower facial adiposity move proportion."
+          : "Two short outdoor walks; keep screens at eye height to avoid a constant downward tilt."
+      });
+      routine.push({
+        title: "Expression reps",
+        detail: weakHarm
+          ? "Before photos or a re-scan: one genuine smile in a mirror (eyes soft). Warmth is your fastest harmony lift."
+          : "Keep a natural smile in first-meet photos — don’t force a wide grin."
+      });
+      routine.push({
+        title: "Night — repair",
+        detail: score < 6.8
+          ? "Cleanse → simple treatment → moisturizer. Skip late alcohol; aim for 7–9 hours with a fixed wake time."
+          : "Cleanse → treatment if you use one → moisturizer. Protect the baseline with sleep."
+      });
+      routine.push({
+        title: weakProp ? "Train — 3× this week" : "Groom — this week",
+        detail: weakProp
+          ? "Full-body strength 3× and protein-forward meals. Recheck LOOK in 14 days for proportion drift."
+          : "Haircut/trim, brows, facial hair lines, clean glasses. Re-scan after the reset."
+      });
+      routine.push({
+        title: "Sunday — re-scan",
+        detail:
+          "Same room light, eye-level camera, soft smile. Compare symmetry / proportion / harmony bars — not just the headline number."
+      });
+
+      let summary =
+        "We ranked habits by your weakest bars. Stick to the routine for a week, then scan again in the same light.";
+      if (score >= 8) summary = "Strong baseline — your plan focuses on protecting sleep, skin, and grooming consistency.";
+      else if (weakHarm && !weakSym && !weakProp) summary = "Geometry is decent; expression and polish will move your score fastest.";
+      else if (weakSym && weakProp) summary = "Recovery + framing + body composition are your top levers this week.";
+
+      return {
+        score,
+        sym,
+        prop,
+        harm,
+        smile,
+        label: result.label,
+        focuses,
+        tips,
+        routine,
+        summary,
+        at: Date.now()
+      };
+    }
+
+    function renderPlan(plan) {
+      if (!plan) {
+        personalBanner.innerHTML =
+          '<p class="empty-plan" id="planEmpty">No scan yet. Hit <strong>Scan my face</strong>, then <strong>My tips</strong> on the scan screen — we’ll rank habits by what your landmarks need most.</p>';
+        personalTips.innerHTML = "";
+        personalRoutine.innerHTML = "";
+        focusChips.hidden = true;
+        focusChips.innerHTML = "";
+        routineLead.textContent = "After a scan, this becomes a 7-day checklist tuned to your weakest scores.";
+        return;
+      }
+
+      const rounded = (Math.round(plan.score * 10) / 10).toFixed(1);
+      personalBanner.innerHTML =
+        '<p class="score-line">Last read <em>' +
+        rounded +
+        "</em> · " +
+        (plan.label || "Your look") +
+        "</p><p>" +
+        plan.summary +
+        "</p>";
+
+      focusChips.hidden = false;
+      focusChips.innerHTML = plan.focuses
+        .map(function (f) {
+          return '<span class="' + (f.weak ? "" : "dim") + '">' + f.label + (f.weak ? " focus" : " ok") + "</span>";
+        })
+        .join("");
+
+      personalTips.innerHTML = plan.tips
+        .map(function (t, i) {
+          return (
+            '<article class="tip' +
+            (i < 2 ? " priority" : "") +
+            '"><h3>' +
+            t.title +
+            "</h3><p>" +
+            t.body +
+            '</p><span class="cite">' +
+            t.cite +
+            "</span></article>"
+          );
+        })
+        .join("");
+
+      routineLead.textContent =
+        "Built from your bars — Symmetry " +
+        Math.round(plan.sym * 100) +
+        "%, Proportion " +
+        Math.round(plan.prop * 100) +
+        "%, Harmony " +
+        Math.round(plan.harm * 100) +
+        "%.";
+
+      personalRoutine.innerHTML = plan.routine
+        .map(function (step) {
+          return "<li><strong>" + step.title + "</strong><span>" + step.detail + "</span></li>";
+        })
+        .join("");
+    }
+
+    function capturePlanFromScan() {
+      const src = holdScore && held ? held : held || {
+        score: smooth.score,
+        sym: smooth.sym,
+        prop: smooth.prop,
+        harm: smooth.harm,
+        smile: smooth.smile,
+        label: scoreMeta.textContent
+      };
+      if (!src || !src.score || scorePanel.hidden) {
+        setStatus("Get a face score first, then tap My tips.", "warn");
+        return null;
+      }
+      const plan = buildPersonalPlan(src);
+      savePlan(plan);
+      return plan;
+    }
+
+    function showHome(opts) {
       view = "home";
       cancelAnimationFrame(raf);
       raf = 0;
@@ -722,6 +1011,7 @@
       holdBtn.textContent = "Hold score";
       holdBtn.disabled = true;
       flipBtn.disabled = true;
+      tipsFromScanBtn.disabled = true;
       scorePanel.hidden = true;
       gate.hidden = false;
       demoImg.hidden = true;
@@ -733,6 +1023,12 @@
       document.body.classList.remove("mode-scan");
       document.body.classList.add("mode-home");
       history.replaceState({ view: "home" }, "", "#home");
+      renderPlan(loadPlan());
+      if (opts && opts.scrollToPlan) {
+        setTimeout(function () {
+          document.getElementById("tips").scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 50);
+      }
     }
 
     function showScan() {
@@ -747,10 +1043,17 @@
 
     goScanBtn.addEventListener("click", showScan);
     goTipsBtn.addEventListener("click", () => {
-      showHome();
-      document.getElementById("tips").scrollIntoView({ behavior: "smooth", block: "start" });
+      showHome({ scrollToPlan: true });
     });
-    backBtn.addEventListener("click", showHome);
+    backBtn.addEventListener("click", () => showHome());
+    tipsFromScanBtn.addEventListener("click", () => {
+      if (!holdScore && held) {
+        holdScore = true;
+        holdBtn.textContent = "Resume";
+      }
+      const plan = capturePlanFromScan();
+      if (plan) showHome({ scrollToPlan: true });
+    });
     window.addEventListener("popstate", () => {
       if (location.hash === "#scan") showScan();
       else showHome();
@@ -856,7 +1159,7 @@
       else label = "Keep facing the lens";
       if (smile > 0.45) label = "Warm smile helps";
 
-      return { score, sym: symmetry, prop: proportion, harm: harmony, label };
+      return { score, sym: symmetry, prop: proportion, harm: harmony, smile, label };
     }
 
     function paintBars(sym, prop, harm) {
@@ -880,6 +1183,7 @@
       smooth.sym = lerp(smooth.sym, result.sym, t);
       smooth.prop = lerp(smooth.prop, result.prop, t);
       smooth.harm = lerp(smooth.harm, result.harm, t);
+      smooth.smile = lerp(smooth.smile || 0, result.smile || 0, t);
       const display = holdScore && held ? held : smooth;
       const rounded = Math.round(display.score * 10) / 10;
       scoreValue.textContent = rounded.toFixed(1);
@@ -887,6 +1191,7 @@
       scorePanel.hidden = false;
       scoreValue.classList.toggle("is-hot", rounded >= 8);
       paintBars(display.sym, display.prop, display.harm);
+      tipsFromScanBtn.disabled = false;
     }
 
     function resizeCanvas(w, h) {
@@ -1022,6 +1327,7 @@
       gate.hidden = true;
       flipBtn.disabled = false;
       holdBtn.disabled = false;
+      tipsFromScanBtn.disabled = true;
       setStatus("Face the camera — scoring live face mocap.");
     }
 
@@ -1080,7 +1386,13 @@
         }
         const rated = rateFace(faces[0], result.faceBlendshapes);
         held = { ...rated };
-        smooth = { score: rated.score, sym: rated.sym, prop: rated.prop, harm: rated.harm };
+        smooth = {
+          score: rated.score,
+          sym: rated.sym,
+          prop: rated.prop,
+          harm: rated.harm,
+          smile: rated.smile
+        };
         showScore(rated);
         setStatus("Sample face · MediaPipe Face Landmarker (IMAGE mode)");
       } catch (err) {
@@ -1141,11 +1453,12 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=3")
+        .register("./sw.js?v=4")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
 
+    renderPlan(loadPlan());
     if (location.hash === "#scan") showScan();
     else showHome();
   </script>
