@@ -1,5 +1,5 @@
 /* LOOK — network-first; bump CACHE to force clients off stale shells. */
-const CACHE = "look-v10-psl-gate";
+const CACHE = "look-v11-psl-tiers";
 const SHELL = [
   "./",
   "./index.html",

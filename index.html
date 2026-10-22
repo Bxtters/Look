@@ -1175,11 +1175,53 @@
       transform: scale(1.04);
     }
 
+    .score-value.tier-subhuman { font-size: clamp(2.2rem, 10vw, 3.6rem); letter-spacing: -0.03em; }
+    .score-value.tier-normie { font-size: clamp(2.4rem, 11vw, 4rem); letter-spacing: -0.03em; }
+    .score-value.tier-chadlite { font-size: clamp(2.2rem, 10vw, 3.6rem); letter-spacing: -0.03em; }
+    .score-value.tier-chad {
+      font-size: clamp(2.6rem, 12vw, 4.4rem);
+      letter-spacing: -0.03em;
+      color: var(--mint);
+    }
+
     .score-meta {
       margin: 10px 0 0;
       font-size: 0.85rem;
       color: rgba(232, 245, 239, 0.7);
       min-height: 1.25em;
+    }
+
+    .psl-scale {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .psl-scale span {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: rgba(232, 245, 239, 0.42);
+      box-shadow: inset 0 0 0 1px rgba(232, 245, 239, 0.12);
+      font-family: Figtree, sans-serif;
+      font-weight: 600;
+    }
+
+    .psl-scale span.on {
+      color: var(--ink);
+      background: var(--mint);
+      box-shadow: none;
+    }
+
+    .results-hero .score-value.tier-subhuman,
+    .results-hero .score-value.tier-normie,
+    .results-hero .score-value.tier-chadlite,
+    .results-hero .score-value.tier-chad {
+      font-size: clamp(2.4rem, 12vw, 4.2rem);
     }
 
     .bars {
@@ -1415,9 +1457,15 @@
 
       <div class="score-panel" id="scorePanel" hidden>
         <div class="score-panel-inner" id="scorePanelInner">
-          <p class="score-label">Your PSL</p>
+          <p class="score-label">PSL scale</p>
           <p class="score-value" id="scoreValue">—</p>
           <p class="score-meta" id="scoreMeta">Hold still for a clean PSL read</p>
+          <div class="psl-scale" id="pslScaleLive" aria-hidden="true">
+            <span data-tier="subhuman">Subhuman</span>
+            <span data-tier="normie">Normie</span>
+            <span data-tier="chadlite">Chadlite</span>
+            <span data-tier="chad">Chad</span>
+          </div>
           <div class="bars" aria-hidden="true">
             <div class="bar"><span>Symmetry</span><i id="barSym"></i></div>
             <div class="bar"><span>Proportion</span><i id="barProp"></i></div>
@@ -1468,9 +1516,15 @@
     </div>
 
     <div class="results-hero">
-      <p class="score-label">Your PSL</p>
+      <p class="score-label">PSL scale</p>
       <p class="score-value" id="resultsScore">—</p>
       <p class="score-meta" id="resultsMeta">From your face scan</p>
+      <div class="psl-scale" id="pslScaleResults" aria-hidden="true">
+        <span data-tier="subhuman">Subhuman</span>
+        <span data-tier="normie">Normie</span>
+        <span data-tier="chadlite">Chadlite</span>
+        <span data-tier="chad">Chad</span>
+      </div>
       <p class="narrative" id="resultsNarrative" hidden></p>
       <div class="results-bars" aria-hidden="true">
         <div class="bar"><span>Symmetry</span><i id="resBarSym"></i></div>
@@ -1821,7 +1875,7 @@
     let lastVideoTime = -1;
     let holdScore = false;
     let held = null;
-    let smooth = { score: 5, sym: 0.5, prop: 0.5, harm: 0.5, smile: 0 };
+    let smooth = { score: 5, sym: 0.5, prop: 0.5, harm: 0.5, smile: 0, tier: "normie", tierLabel: "Normie" };
     let mode = "live";
     let runningMode = "VIDEO";
     let view = "home";
@@ -2009,6 +2063,9 @@
       const prop = result.prop;
       const harm = result.harm;
       const smile = result.smile || 0;
+      const tierInfo = pslTierFromScore(score);
+      const tier = result.tier || tierInfo.tier;
+      const tierLabel = result.tierLabel || tierInfo.label;
       const focuses = [];
       const tipIds = [];
 
@@ -2092,31 +2149,40 @@
       const tone = userSettings.planTone === "clinical" ? "clinical" : "coach";
       let summary =
         tone === "clinical"
-          ? "Prioritized interventions map to your lowest landmark-derived bars. Reassess under matched lighting."
-          : "We ranked habits by your weakest bars. Stick to the routine, then re-scan in the same light.";
-      if (score >= 8) {
+          ? "PSL tier <strong>" +
+            tierLabel +
+            "</strong>. Prioritized interventions map to your lowest landmark-derived bars."
+          : "You’re on the PSL black-pill scale as <strong>" +
+            tierLabel +
+            "</strong>. We ranked habits by your weakest bars — climb the ladder with the plan below.";
+      if (tier === "chad") {
         summary =
           tone === "clinical"
-            ? "High baseline; maintenance emphasis on sleep regularity, photoprotection, and grooming consistency."
-            : "Strong baseline — your plan protects sleep, skin, and grooming so the curve stays high.";
-      } else if (weakHarm && !weakSym && !weakProp) {
+            ? "PSL tier Chad — maintenance emphasis on sleep, photoprotection, and grooming consistency."
+            : "PSL tier <strong>Chad</strong> — protect the baseline with sleep, SPF, and sharp grooming.";
+      } else if (tier === "chadlite") {
         summary =
           tone === "clinical"
-            ? "Geometric indices are adequate; expression and surface polish have the highest near-term elasticity."
-            : "Geometry is decent; expression and polish move your score fastest.";
-      } else if (weakSym && weakProp) {
+            ? "PSL tier Chadlite — polish and consistency are the nearest rung to Chad."
+            : "PSL tier <strong>Chadlite</strong> — expression, skin, and grooming can push you toward Chad.";
+      } else if (tier === "normie") {
         summary =
           tone === "clinical"
-            ? "Primary constraints: recovery-linked asymmetry cues and proportion / adiposity markers."
-            : "Recovery + framing + body composition are your top levers.";
+            ? "PSL tier Normie — recovery, framing, and body-composition levers dominate near-term mobility."
+            : "PSL tier <strong>Normie</strong> — sleep, silhouette, and smile are your fastest climb levers.";
+      } else {
+        summary =
+          tone === "clinical"
+            ? "PSL tier Subhuman — prioritize sleep debt payoff, even lighting, and barrier-first skin."
+            : "PSL tier <strong>Subhuman</strong> — start with sleep, light, and basic grooming before chasing maxes.";
       }
 
       const scoreTxt = Settings.formatScore(score, userSettings.scoreDecimals);
       const narrative =
-        (tone === "clinical" ? "Locked assessment: <strong>" : "Today’s locked read is <strong>") +
+        (tone === "clinical" ? "Locked PSL: <strong>" : "Locked PSL: <strong>") +
+        tierLabel +
+        "</strong> (PSL " +
         scoreTxt +
-        "</strong> (" +
-        (result.label || "your look") +
         "). Symmetry <strong>" +
         Math.round(sym * 100) +
         "%</strong>, proportion <strong>" +
@@ -2242,7 +2308,9 @@
         prop,
         harm,
         smile,
-        label: result.label,
+        label: tierLabel,
+        tier,
+        tierLabel,
         focuses,
         tips,
         routine,
@@ -2484,10 +2552,13 @@
 
       const rounded = Settings.formatScore(plan.score, userSettings.scoreDecimals);
       const target = Settings.formatScore(plan.lift.target, userSettings.scoreDecimals);
+      const lastTier = plan.tierLabel || pslTierFromScore(plan.score).label;
       personalBanner.innerHTML =
         '<p class="score-line">Last PSL <em>' +
+        lastTier +
+        "</em> · " +
         rounded +
-        "</em> · plan targets <em>" +
+        " → target <em>" +
         target +
         "</em></p><p>" +
         plan.summary +
@@ -2521,8 +2592,16 @@
     function fillResults(plan) {
       activePlan = plan;
       chartWeeks = userSettings.chartWeeks || chartWeeks;
-      resultsScore.textContent = Settings.formatScore(plan.score, userSettings.scoreDecimals);
-      resultsMeta.textContent = (plan.label || "PSL read") + " · locked from scan";
+      const tierInfo = pslTierFromScore(plan.score);
+      const tier = plan.tier || tierInfo.tier;
+      const tierLabel = plan.tierLabel || plan.label || tierInfo.label;
+      resultsScore.textContent = String(tierLabel).toUpperCase();
+      resultsMeta.textContent =
+        "PSL " +
+        Settings.formatScore(plan.score, userSettings.scoreDecimals) +
+        " · black-pill scale · locked";
+      applyTierClass(resultsScore, tier);
+      paintPslScale(document.getElementById("pslScaleResults"), tier);
       const narr = document.getElementById("resultsNarrative");
       if (narr) {
         narr.hidden = !plan.narrative;
@@ -2636,6 +2715,7 @@
         openSignup();
         return;
       }
+      const liveTier = pslTierFromScore(smooth.score);
       const src =
         held || {
           score: smooth.score,
@@ -2643,7 +2723,9 @@
           prop: smooth.prop,
           harm: smooth.harm,
           smile: smooth.smile,
-          label: scoreMeta.textContent
+          label: smooth.tierLabel || liveTier.label,
+          tier: smooth.tier || liveTier.tier,
+          tierLabel: smooth.tierLabel || liveTier.label
         };
       if (!src || !src.score || scorePanel.hidden) {
         setStatus("Keep your face in frame until a PSL appears, then Lock PSL.", "warn");
@@ -2784,16 +2866,19 @@
       }
       updateScoreAuthGate();
       if (accountSession && !scorePanel.hidden && smooth.score) {
-        scoreValue.textContent = Settings.formatScore(
-          holdScore && held ? held.score : smooth.score,
-          userSettings.scoreDecimals
-        );
+        const disp = holdScore && held ? held : smooth;
+        const tInfo = pslTierFromScore(disp.score);
+        const tier = disp.tier || tInfo.tier;
+        const tierLabel = disp.tierLabel || tInfo.label;
+        scoreValue.textContent = tierLabel.toUpperCase();
         scoreMeta.textContent =
-          holdScore && held ? "Held · " + (held.label || "") : scoreMeta.textContent;
-        if (!(holdScore && held)) {
-          /* keep live meta if tracking */
-        }
-        paintBars(smooth.sym, smooth.prop, smooth.harm);
+          (holdScore ? "Locked · " : "") +
+          "PSL " +
+          Settings.formatScore(disp.score, userSettings.scoreDecimals) +
+          " · black-pill scale";
+        applyTierClass(scoreValue, tier);
+        paintPslScale(document.getElementById("pslScaleLive"), tier);
+        paintBars(disp.sym || smooth.sym, disp.prop || smooth.prop, disp.harm || smooth.harm);
         lockScoreBtn.disabled = false;
       }
     }
@@ -2820,7 +2905,7 @@
             '"><span>' +
             d.toLocaleString() +
             " · " +
-            (r.label || "Scan") +
+            (r.tierLabel || r.label || pslTierFromScore(r.score).label) +
             '</span><span class="h-score">' +
             Settings.formatScore(r.score, userSettings.scoreDecimals) +
             "</span></li>"
@@ -3376,17 +3461,45 @@
       let score = 1 + Math.pow(composite, 0.92) * 8.4;
       score = clamp(score + ((noseTip.x * 17 + noseTip.y * 31) % 1) * 0.35 - 0.175, 1, 10);
 
-      let label = "Solid geometry";
-      if (score >= 9) label = "Striking balance";
-      else if (score >= 8) label = "Strong proportions";
-      else if (score >= 7) label = "Harmonious look";
-      else if (score >= 6) label = "Good symmetry";
-      else if (score >= 5) label = "Average read";
-      else if (score >= 4) label = "Soft proportions";
-      else label = "Keep facing the lens";
-      if (smile > 0.45) label = "Warm smile helps";
+      const tierInfo = pslTierFromScore(score);
+      let label = tierInfo.label;
+      if (smile > 0.45 && tierInfo.tier !== "chad") {
+        label = tierInfo.label + " · smile lift";
+      }
 
-      return { score, sym: symmetry, prop: proportion, harm: harmony, smile, label };
+      return {
+        score,
+        sym: symmetry,
+        prop: proportion,
+        harm: harmony,
+        smile,
+        label,
+        tier: tierInfo.tier,
+        tierLabel: tierInfo.label
+      };
+    }
+
+    /** Looksmax / black-pill PSL tiers on a 1–10 read. */
+    function pslTierFromScore(score) {
+      const s = Number(score) || 0;
+      if (s < 5) return { tier: "subhuman", label: "Subhuman" };
+      if (s < 7) return { tier: "normie", label: "Normie" };
+      if (s < 8) return { tier: "chadlite", label: "Chadlite" };
+      return { tier: "chad", label: "Chad" };
+    }
+
+    function paintPslScale(el, tier) {
+      if (!el) return;
+      el.querySelectorAll("[data-tier]").forEach((node) => {
+        node.classList.toggle("on", node.getAttribute("data-tier") === tier);
+      });
+    }
+
+    function applyTierClass(el, tier) {
+      if (!el) return;
+      el.classList.remove("tier-subhuman", "tier-normie", "tier-chadlite", "tier-chad", "is-hot");
+      if (tier) el.classList.add("tier-" + tier);
+      if (tier === "chad") el.classList.add("is-hot");
     }
 
     function paintBars(sym, prop, harm) {
@@ -3411,23 +3524,25 @@
       smooth.prop = lerp(smooth.prop, result.prop, t);
       smooth.harm = lerp(smooth.harm, result.harm, t);
       smooth.smile = lerp(smooth.smile || 0, result.smile || 0, t);
+      if (result.tier) smooth.tier = result.tier;
+      if (result.tierLabel) smooth.tierLabel = result.tierLabel;
       const display = holdScore && held ? held : smooth;
-      const rounded = Math.round(display.score * 10) / 10;
+      const tierInfo = pslTierFromScore(display.score);
+      const tier = display.tier || tierInfo.tier;
+      const tierLabel = display.tierLabel || tierInfo.label;
       const loggedIn = !!accountSession;
-      scoreValue.textContent = loggedIn
-        ? Settings.formatScore(display.score, userSettings.scoreDecimals)
-        : "••";
+      scoreValue.textContent = loggedIn ? tierLabel.toUpperCase() : "••";
       scoreMeta.textContent = loggedIn
-        ? holdScore
-          ? "Held · " + (held.label || result.label)
-          : result.label
+        ? (holdScore ? "Locked · " : "") +
+          "PSL " +
+          Settings.formatScore(display.score, userSettings.scoreDecimals) +
+          " · black-pill scale"
         : "PSL hidden — sign up or log in";
       scorePanel.hidden = false;
-      scoreValue.classList.toggle("is-hot", loggedIn && rounded >= 8);
+      applyTierClass(scoreValue, loggedIn ? tier : null);
+      paintPslScale(document.getElementById("pslScaleLive"), loggedIn ? tier : null);
       if (loggedIn) paintBars(display.sym, display.prop, display.harm);
-      else {
-        paintBars(0.15, 0.15, 0.15);
-      }
+      else paintBars(0.15, 0.15, 0.15);
       lockScoreBtn.disabled = !loggedIn;
       updateScoreAuthGate();
     }
@@ -3631,7 +3746,9 @@
           sym: rated.sym,
           prop: rated.prop,
           harm: rated.harm,
-          smile: rated.smile
+          smile: rated.smile,
+          tier: rated.tier,
+          tierLabel: rated.tierLabel
         };
         showScore(rated);
         setStatus("Sample face · MediaPipe Face Landmarker (IMAGE mode)");
@@ -3689,7 +3806,7 @@
         regs.forEach((r) => r.update().catch(() => {}));
       });
       navigator.serviceWorker
-        .register("./sw.js?v=10")
+        .register("./sw.js?v=11")
         .then((reg) => reg.update().catch(() => {}))
         .catch(() => {});
     }
