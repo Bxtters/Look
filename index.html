@@ -1984,6 +1984,29 @@
     /** PSL scale is 1–8; 8 is true Adam and is physically unreachable. */
     const PSL_TRUE_ADAM = 8;
     const PSL_MAX = 7.99;
+    /**
+     * Scale anchor — MediaPipe ratios from the high-Chad-lite reference face
+     * (face-zoomed crop). A face matching these lands at `score` (high Chad lite).
+     * Everything else is graded by similarity to this profile.
+     */
+    const REF_PSL = {
+      score: 6.25,
+      heightWidth: 1.237,
+      thirdsTop: 0.327,
+      thirdsMid: 0.215,
+      thirdsLow: 0.544,
+      eyeSpacing: 2.158,
+      mouthToEyes: 0.874,
+      noseToFace: 0.215,
+      jawDominance: 0.808,
+      browRatio: 0.872,
+      cheekBalance: 2.182,
+      // Outer corner higher than inner (normalized face units).
+      canthalLift: 0.008,
+      symmetry: 0.916,
+      // Observed self-match of this face through the live face-zoom pipeline.
+      selfMatch: 0.92
+    };
     let accountSession = null; // { accountId, displayName, key, profile, provider, email }
     let selectedAccountId = null;
     let cachedAccounts = [];
@@ -3727,8 +3750,6 @@
       const rightEyeInner = lm[L.rightEyeInner];
       const leftMouth = lm[L.leftMouth];
       const rightMouth = lm[L.rightMouth];
-      const upperLip = lm[L.upperLip];
-      const lowerLip = lm[L.lowerLip];
       const leftBrow = lm[L.leftBrow];
       const rightBrow = lm[L.rightBrow];
 
@@ -3763,54 +3784,64 @@
       const eyeWidth = (dist(leftEyeOuter, leftEyeInner) + dist(rightEyeOuter, rightEyeInner)) / 2;
       const mouthWidth = dist(leftMouth, rightMouth);
       const noseLength = dist(noseBridge, noseTip);
-      const mouthHeight = dist(upperLip, lowerLip);
       const browSpan = dist(leftBrow, rightBrow);
       const jawDominance = faceWidth / (faceHeight || 1e-6);
-      // Positive canthal tilt (outer corners higher) — hunter-eye cue
-      const canthalL = Math.atan2(leftEyeOuter.y - leftEyeInner.y, leftEyeOuter.x - leftEyeInner.x);
-      const canthalR = Math.atan2(rightEyeInner.y - rightEyeOuter.y, rightEyeInner.x - rightEyeOuter.x);
-      const canthalTilt = (-canthalL + canthalR) / 2;
+      // Positive when outer corners sit higher than inners (image y grows downward).
+      const canthalLift =
+        (leftEyeInner.y - leftEyeOuter.y + (rightEyeInner.y - rightEyeOuter.y)) / 2;
 
-      // Idealized masculine / high-chadlite bands (after face-zoom crop).
-      const golden = near(heightWidth, 1.35, 0.42);
-      const thirds =
-        (near(thirdsTop, 0.32, 0.11) +
-          near(thirdsMid, 0.3, 0.1) +
-          near(thirdsLow, 0.38, 0.12)) /
+      // Similarity to the high-Chad-lite reference ratios (REF_PSL).
+      const R = REF_PSL;
+      const matchHeight = near(heightWidth, R.heightWidth, 0.38);
+      const matchThirds =
+        (near(thirdsTop, R.thirdsTop, 0.12) +
+          near(thirdsMid, R.thirdsMid, 0.12) +
+          near(thirdsLow, R.thirdsLow, 0.16)) /
         3;
-      const eyeSpacing = near(eyeSpan / (eyeWidth || 1e-6), 1.45, 0.5);
-      const mouthToEyes = near(mouthWidth / (eyeSpan || 1e-6), 1.0, 0.32);
-      const noseToFace = near(noseLength / faceHeight, 0.2, 0.09);
-      const jawScore = near(jawDominance, 0.78, 0.22);
-      const browScore = near(browSpan / (faceWidth || 1e-6), 0.72, 0.2);
-      const canthalScore = clamp(0.55 + canthalTilt * 8, 0, 1);
+      const matchEyes = near(eyeSpan / (eyeWidth || 1e-6), R.eyeSpacing, 0.65);
+      const matchMouth = near(mouthWidth / (eyeSpan || 1e-6), R.mouthToEyes, 0.35);
+      const matchNose = near(noseLength / faceHeight, R.noseToFace, 0.1);
+      const matchJaw = near(jawDominance, R.jawDominance, 0.2);
+      const matchBrow = near(browSpan / (faceWidth || 1e-6), R.browRatio, 0.22);
+      const matchCanthal = near(canthalLift, R.canthalLift, 0.05);
+      const matchCheek = near(faceWidth / (eyeSpan || 1e-6), R.cheekBalance, 0.55);
+      const matchSym = near(symmetry, R.symmetry, 0.22);
+
       const proportion = clamp(
-        golden * 0.16 +
-          thirds * 0.2 +
-          eyeSpacing * 0.16 +
-          mouthToEyes * 0.12 +
-          noseToFace * 0.1 +
-          jawScore * 0.16 +
-          browScore * 0.05 +
-          canthalScore * 0.05,
+        matchHeight * 0.14 +
+          matchThirds * 0.18 +
+          matchEyes * 0.14 +
+          matchMouth * 0.1 +
+          matchNose * 0.08 +
+          matchJaw * 0.18 +
+          matchBrow * 0.06 +
+          matchCanthal * 0.12,
         0,
         1
       );
 
-      const lipBalance = near(mouthWidth / (mouthHeight || 1e-6), 2.9, 1.4);
-      const cheekBalance = near(faceWidth / eyeSpan, 2.15, 0.5);
       const smile =
         (blend(blendshapes, "mouthSmileLeft") + blend(blendshapes, "mouthSmileRight")) / 2;
       const openJaw = blend(blendshapes, "jawOpen");
-      // Neutral faces keep a solid harmony baseline — don't require a grin.
-      const expression = clamp(0.62 + smile * 0.28 - openJaw * 0.4, 0, 1);
-      const harmony = clamp(lipBalance * 0.28 + cheekBalance * 0.42 + expression * 0.3, 0, 1);
+      const expression = clamp(0.72 + smile * 0.2 - openJaw * 0.4, 0, 1);
+      // Skip unstable closed-mouth lip height; cheek width vs eyes carries harmony.
+      const harmony = clamp(matchCheek * 0.55 + matchMouth * 0.15 + expression * 0.3, 0, 1);
 
-      const composite = symmetry * 0.3 + proportion * 0.42 + harmony * 0.28;
-      // Map onto PSL 1–8; strong structure (jaw/canthal/thirds) lands high Chad lite, never true Adam.
-      let score = 1.2 + Math.pow(composite, 0.74) * 6.7;
-      // Small structure kicker for square-jaw / positive-tilt faces after face-zoom.
-      score += jawScore * 0.12 + canthalScore * 0.08;
+      // 1.0 ≈ same ratio profile as the reference guy.
+      const match = clamp(
+        matchSym * 0.2 + proportion * 0.52 + harmony * 0.28,
+        0,
+        1
+      );
+
+      // Anchor the whole 1–8 ladder on him: his live self-match → high Chad lite (6.25).
+      // Slightly above him can climb toward Chad; 8 (true Adam) stays unreachable.
+      const anchor = R.score;
+      const self = R.selfMatch;
+      let score = 1.1 + (match / self) * (anchor - 1.1);
+      if (match >= self) {
+        score = anchor + ((match - self) / Math.max(1e-6, 1 - self)) * (6.85 - anchor);
+      }
       score = clamp(score, 1, PSL_MAX);
 
       const tierInfo = pslTierFromScore(score);
