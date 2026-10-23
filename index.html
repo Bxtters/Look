@@ -661,10 +661,113 @@
     }
 
     .gsi-parent {
-      min-height: 44px;
-      display: flex;
-      justify-content: center;
-      margin: 4px 0 8px;
+      display: none !important;
+    }
+
+    .account-picker {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+
+    .account-picker[hidden] { display: none !important; }
+
+    .account-picker-label {
+      margin: 0;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: Figtree, sans-serif;
+      font-weight: 600;
+    }
+
+    .account-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .account-list li button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      padding: 8px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(232, 245, 239, 0.14);
+      background: rgba(7, 17, 15, 0.45);
+      color: var(--foam);
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .account-list li button:hover {
+      border-color: rgba(94, 240, 168, 0.45);
+      background: rgba(94, 240, 168, 0.08);
+    }
+
+    .account-list li button.is-selected {
+      border-color: var(--mint);
+      box-shadow: inset 0 0 0 1px rgba(94, 240, 168, 0.35);
+    }
+
+    .account-list .acc-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: rgba(94, 240, 168, 0.12);
+      color: var(--mint);
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .account-list .acc-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .account-list .acc-meta {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .account-list .acc-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .account-list .acc-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .account-list .acc-badge {
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid rgba(232, 245, 239, 0.16);
+      border-radius: 999px;
+      padding: 4px 8px;
     }
 
     body.hide-products .product-list { display: none !important; }
@@ -1576,14 +1679,19 @@
       <h2 id="authModalTitle">Sign up</h2>
       <p class="privacy" id="authPrivacy">
         Create a LOOK account on this device. Scores stay encrypted in your browser (PBKDF2 + AES-GCM).
-        Face scans are never uploaded. Google sign-in only shares the identity Google already shows you — LOOK still keeps plans on-device.
+        Face scans are never uploaded. Each device can hold many accounts; Google identities unlock independently per device.
       </p>
+
+      <div class="account-picker" id="accountPicker" hidden>
+        <p class="account-picker-label">Accounts on this device</p>
+        <ul class="account-list" id="accountList"></ul>
+      </div>
 
       <button type="button" class="google-btn" id="googleAuthBtn">
         <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continue with Google
       </button>
-      <div class="gsi-parent" id="gsiButtonParent" hidden></div>
+      <div class="gsi-parent" id="gsiButtonParent" hidden aria-hidden="true"></div>
       <div id="googleSetup" hidden>
         <label for="googleClientIdInput">Google Web Client ID</label>
         <input id="googleClientIdInput" autocomplete="off" spellcheck="false" placeholder="123456789-abc.apps.googleusercontent.com">
@@ -1596,7 +1704,7 @@
           <button type="button" id="googleClientIdSave">Save &amp; continue</button>
         </div>
       </div>
-      <div class="auth-divider">or use a password</div>
+      <div class="auth-divider" id="authPasswordDivider">or use a password</div>
 
       <div id="authSignupFields">
         <label for="accName">Display name</label>
@@ -1656,9 +1764,11 @@
       <p class="err" id="profileErr" hidden></p>
       <div class="modal-actions">
         <button type="button" id="profileSave">Save profile</button>
+        <button type="button" class="ghost" id="profileSwitchAccount">Switch account</button>
         <button type="button" class="ghost" id="profileOpenSettings">Settings</button>
         <button type="button" class="ghost" id="profileExport">Export backup</button>
         <button type="button" class="ghost" id="profileSignOut">Sign out</button>
+        <button type="button" class="ghost" id="profileDeleteAccount">Delete this account</button>
         <button type="button" class="ghost" id="profileCancel">Close</button>
       </div>
     </div>
@@ -1861,7 +1971,9 @@
     const resBarProp = document.getElementById("resBarProp");
     const resBarHarm = document.getElementById("resBarHarm");
     const PLAN_KEY = "look.personalPlan.v3";
-    let accountSession = null; // { displayName, key, profile, provider, email }
+    let accountSession = null; // { accountId, displayName, key, profile, provider, email }
+    let selectedAccountId = null;
+    let cachedAccounts = [];
 
     const video = document.getElementById("cam");
     const canvas = document.getElementById("mesh");
@@ -2749,7 +2861,7 @@
       showResults(plan);
       if (userSettings.autoSaveAccount && accountSession) {
         try {
-          await Vault.saveScan(accountSession.key, plan);
+          await Vault.saveScan(accountSession.key, plan, accountSession.accountId);
           await renderHistory();
         } catch (_) {
           /* non-blocking */
@@ -2831,8 +2943,8 @@
     }
 
     async function refreshAccountChrome() {
-      const exists = await Vault.vaultExists();
-      const meta = exists ? await Vault.getVaultMeta() : null;
+      cachedAccounts = await Vault.listAccounts();
+      const exists = cachedAccounts.length > 0;
       const loggedIn = !!accountSession;
 
       [loginBtn, signupBtn, loginBtnResults, signupBtnResults].forEach((el) => {
@@ -2860,16 +2972,20 @@
           name
         );
         applyProfileAccent(accountSession.profile);
+        const extra =
+          cachedAccounts.length > 1 ? " · " + cachedAccounts.length + " accounts on device" : "";
         accountStatus.textContent =
           "Signed in · " +
           name +
-          (accountSession.provider === "google" ? " · Google" : " · on-device");
+          (accountSession.provider === "google" ? " · Google" : " · on-device") +
+          extra;
         await renderHistory();
       } else if (exists) {
+        const n = cachedAccounts.length;
         accountStatus.textContent =
-          meta && meta.provider === "google"
-            ? "Account on this device · continue with Google to unlock PSL"
-            : "Account on this device · log in to unlock PSL";
+          n === 1
+            ? "1 account on this device · log in to unlock PSL"
+            : n + " accounts on this device · log in to unlock PSL";
         historySection.hidden = true;
       } else {
         accountStatus.textContent = "Sign up to reveal PSL · face scans never leave this device";
@@ -2899,7 +3015,7 @@
         historySection.hidden = true;
         return;
       }
-      const rows = await Vault.listScans(accountSession.key);
+      const rows = await Vault.listScans(accountSession.key, accountSession.accountId);
       if (!rows.length) {
         historySection.hidden = false;
         historyList.innerHTML = "<li>No saved scans yet — lock a score and tap Save to account.</li>";
@@ -2935,46 +3051,137 @@
       });
     }
 
+    function selectedAccountMeta() {
+      if (!selectedAccountId) return null;
+      return cachedAccounts.find((a) => a.id === selectedAccountId) || null;
+    }
+
+    function renderAccountPicker(accounts) {
+      const picker = document.getElementById("accountPicker");
+      const list = document.getElementById("accountList");
+      if (!picker || !list) return;
+      if (!accounts.length) {
+        picker.hidden = true;
+        list.innerHTML = "";
+        return;
+      }
+      picker.hidden = false;
+      list.innerHTML = accounts
+        .map((acc) => {
+          const isSel = acc.id === selectedAccountId;
+          const src = acc.avatarPublic || "";
+          const badge = acc.provider === "google" ? "Google" : "Password";
+          const sub = acc.email || (acc.provider === "google" ? "Continue with Google" : "Password unlock");
+          const avatarInner = src
+            ? '<img alt="" src="' + src.replace(/"/g, "&quot;") + '">'
+            : initialsFrom(acc.displayName);
+          return (
+            '<li><button type="button" data-account-id="' +
+            acc.id +
+            '" class="' +
+            (isSel ? "is-selected" : "") +
+            '" aria-pressed="' +
+            (isSel ? "true" : "false") +
+            '"><span class="acc-avatar">' +
+            avatarInner +
+            '</span><span class="acc-meta"><span class="acc-name">' +
+            (acc.displayName || "Looker").replace(/</g, "&lt;") +
+            '</span><span class="acc-sub">' +
+            String(sub).replace(/</g, "&lt;") +
+            '</span></span><span class="acc-badge">' +
+            badge +
+            "</span></button></li>"
+          );
+        })
+        .join("");
+      list.querySelectorAll("button[data-account-id]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedAccountId = btn.getAttribute("data-account-id");
+          syncLoginFieldsForSelection();
+          renderAccountPicker(cachedAccounts);
+        });
+      });
+    }
+
+    function syncLoginFieldsForSelection() {
+      const meta = selectedAccountMeta();
+      const loginFields = document.getElementById("authLoginFields");
+      const submit = document.getElementById("authSubmit");
+      const unlockName = document.getElementById("accUnlockName");
+      if (authMode !== "login") return;
+      if (!meta) {
+        loginFields.hidden = true;
+        submit.hidden = true;
+        return;
+      }
+      unlockName.textContent = meta.displayName || "your account";
+      if (meta.provider === "google") {
+        loginFields.hidden = true;
+        submit.hidden = true;
+        showAuthErr("Selected account uses Google — tap Continue with Google.");
+      } else {
+        loginFields.hidden = false;
+        submit.hidden = false;
+        submit.textContent = "Log in";
+        showAuthErr("");
+      }
+    }
+
     async function configureAuthModal(mode) {
       showAuthErr("");
       authMode = mode;
-      const exists = await Vault.vaultExists();
-      const meta = exists ? await Vault.getVaultMeta() : null;
+      cachedAccounts = await Vault.listAccounts();
       const title = document.getElementById("authModalTitle");
       const submit = document.getElementById("authSubmit");
       const switchBtn = document.getElementById("authSwitch");
       const signupFields = document.getElementById("authSignupFields");
       const loginFields = document.getElementById("authLoginFields");
+      const divider = document.getElementById("authPasswordDivider");
+      const privacy = document.getElementById("authPrivacy");
+
+      if (!selectedAccountId || !cachedAccounts.some((a) => a.id === selectedAccountId)) {
+        selectedAccountId = cachedAccounts[0] ? cachedAccounts[0].id : null;
+      }
+
+      showGoogleSetup(false);
+      const gsi = document.getElementById("gsiButtonParent");
+      if (gsi) {
+        gsi.innerHTML = "";
+        gsi.hidden = true;
+      }
 
       if (mode === "login") {
         title.textContent = "Log in";
-        submit.textContent = "Log in";
         switchBtn.textContent = "Need an account? Sign up";
         signupFields.hidden = true;
-        loginFields.hidden = false;
-        document.getElementById("accUnlockName").textContent =
-          (meta && meta.displayName) || "your account";
-        if (meta && meta.provider === "google") {
+        divider.textContent = "or unlock with password";
+        privacy.textContent =
+          "Pick an account on this device, or Continue with Google. Each device keeps its own encrypted vaults — the same Google user can sign in on multiple devices.";
+        renderAccountPicker(cachedAccounts);
+        if (!cachedAccounts.length) {
           loginFields.hidden = true;
           submit.hidden = true;
-          showAuthErr("This device account uses Google — tap Continue with Google.");
+          showAuthErr("No accounts on this device yet — sign up or Continue with Google.");
         } else {
-          submit.hidden = false;
+          syncLoginFieldsForSelection();
         }
       } else {
-        title.textContent = "Sign up";
+        title.textContent = cachedAccounts.length ? "Add account" : "Sign up";
         submit.textContent = "Sign up";
         submit.hidden = false;
-        switchBtn.textContent = "Have an account? Log in";
+        switchBtn.textContent = cachedAccounts.length
+          ? "Switch to an existing account"
+          : "Have an account? Log in";
         signupFields.hidden = false;
         loginFields.hidden = true;
-        if (exists) {
-          showAuthErr("An account already exists on this device. Log in instead.");
-          signupFields.hidden = true;
-        }
+        divider.textContent = "or create a password account";
+        privacy.textContent =
+          "Add another LOOK account on this device. Scores stay encrypted here (PBKDF2 + AES-GCM). Face scans are never uploaded.";
+        renderAccountPicker([]);
       }
       authModal.hidden = false;
-      ensureGoogle().catch(() => {});
+      // Warm token client only — never render a second GSI button.
+      ensureGoogle({ renderOfficialButton: false }).catch(() => {});
     }
 
     function openSignup() {
@@ -3023,12 +3230,7 @@
 
     function loadGoogleScript() {
       return new Promise((resolve, reject) => {
-        if (
-          window.google &&
-          window.google.accounts &&
-          window.google.accounts.id &&
-          window.google.accounts.oauth2
-        ) {
+        if (window.google && window.google.accounts && window.google.accounts.oauth2) {
           resolve();
           return;
         }
@@ -3056,18 +3258,13 @@
       openProfileModal();
     }
 
-    async function ensureGoogle() {
+    async function ensureGoogle(opts) {
+      const options = opts || {};
       if (!resolveGoogleClientId()) return false;
       if (!googleReady) {
         googleReady = loadGoogleScript().then(() => {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: handleGoogleCredential,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-            context: authMode === "login" ? "signin" : "signup",
-            use_fedcm_for_prompt: true
-          });
+          // Token client powers the custom "Continue with Google" button.
+          // Do not initialize One Tap / renderButton — that duplicated the UI.
           googleTokenClient = window.google.accounts.oauth2.initTokenClient({
             client_id: googleClientId,
             scope: "openid email profile",
@@ -3108,31 +3305,23 @@
       const parent = document.getElementById("gsiButtonParent");
       if (parent) {
         parent.innerHTML = "";
-        parent.hidden = false;
-        window.google.accounts.id.renderButton(parent, {
-          theme: "outline",
-          size: "large",
-          shape: "pill",
-          text: authMode === "login" ? "signin_with" : "signup_with",
-          width: Math.min(320, Math.floor(parent.clientWidth || 280))
-        });
+        parent.hidden = true;
       }
-      return true;
-    }
-
-    async function handleGoogleCredential(response) {
-      showAuthErr("");
-      try {
-        const identity = Vault.decodeGoogleCredential(response.credential);
-        await finishGoogleIdentity(identity);
-      } catch (e) {
-        showAuthErr((e && e.message) || "Google sign-in failed");
+      if (options.renderOfficialButton) {
+        // Kept for emergency fallback only — never shown in the normal auth modal.
+        return !!googleTokenClient;
       }
+      return !!googleTokenClient;
     }
 
     function showGoogleSetup(show) {
       const box = document.getElementById("googleSetup");
       if (!box) return;
+      // Never surface Client ID paste UI when config already has a baked ID.
+      if (show && (CONFIG_GOOGLE_CLIENT_ID || "").trim()) {
+        box.hidden = true;
+        return;
+      }
       box.hidden = !show;
       if (show) {
         document.getElementById("googleOriginHint").textContent = location.origin;
@@ -3151,14 +3340,9 @@
       }
       showGoogleSetup(false);
       try {
-        googleReady = null;
-        googleTokenClient = null;
-        await ensureGoogle();
-        if (googleTokenClient) {
-          googleTokenClient.requestAccessToken({ prompt: "consent" });
-          return;
-        }
-        window.google.accounts.id.prompt();
+        await ensureGoogle({ renderOfficialButton: false });
+        if (!googleTokenClient) throw new Error("Google sign-in unavailable");
+        googleTokenClient.requestAccessToken({ prompt: "" });
       } catch (e) {
         showAuthErr((e && e.message) || "Google sign-in unavailable");
       }
@@ -3297,8 +3481,13 @@
           if (p1 !== p2) throw new Error("Passwords do not match.");
           accountSession = await Vault.createVault(name, p1);
         } else {
+          const meta = selectedAccountMeta();
+          if (!meta) throw new Error("Choose an account to unlock.");
+          if (meta.provider === "google") {
+            throw new Error("This account uses Google. Tap Continue with Google.");
+          }
           const p = document.getElementById("accUnlock").value;
-          accountSession = await Vault.unlockVault(p);
+          accountSession = await Vault.unlockVault(p, meta.id);
         }
         authModal.hidden = true;
         await refreshAccountChrome();
@@ -3312,17 +3501,43 @@
       profileModal.hidden = true;
     });
     document.getElementById("profileOpenSettings").addEventListener("click", openSettingsModal);
+    document.getElementById("profileSwitchAccount").addEventListener("click", () => {
+      profileModal.hidden = true;
+      accountSession = null;
+      document.documentElement.style.setProperty("--mint", "#5ef0a8");
+      refreshAccountChrome().then(() => openLogin());
+    });
     document.getElementById("profileSignOut").addEventListener("click", () => {
       accountSession = null;
       profileModal.hidden = true;
       document.documentElement.style.setProperty("--mint", "#5ef0a8");
       refreshAccountChrome();
     });
+    document.getElementById("profileDeleteAccount").addEventListener("click", async () => {
+      if (!accountSession) return;
+      const name = accountSession.displayName || "this account";
+      if (!confirm("Delete “" + name + "” from this device? Encrypted history for this account will be removed. Other accounts stay.")) {
+        return;
+      }
+      try {
+        const id = accountSession.accountId;
+        await Vault.deleteAccount(id);
+        accountSession = null;
+        selectedAccountId = null;
+        profileModal.hidden = true;
+        document.documentElement.style.setProperty("--mint", "#5ef0a8");
+        await refreshAccountChrome();
+      } catch (e) {
+        showProfileErr((e && e.message) || "Could not delete account");
+      }
+    });
     document.getElementById("profileExport").addEventListener("click", async () => {
       try {
-        const blob = new Blob([JSON.stringify(await Vault.exportEncryptedBackup(), null, 2)], {
-          type: "application/json"
-        });
+        if (!accountSession) throw new Error("Sign in first.");
+        const blob = new Blob(
+          [JSON.stringify(await Vault.exportEncryptedBackup(accountSession.accountId), null, 2)],
+          { type: "application/json" }
+        );
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -3362,7 +3577,11 @@
           website: document.getElementById("profWebsite").value,
           accent: document.getElementById("profAccent").value
         };
-        accountSession.profile = await Vault.saveProfile(accountSession.key, next);
+        accountSession.profile = await Vault.saveProfile(
+          accountSession.key,
+          next,
+          accountSession.accountId
+        );
         accountSession.displayName = accountSession.profile.displayName;
         applyProfileAccent(accountSession.profile);
         await refreshAccountChrome();
@@ -3400,7 +3619,7 @@
         return;
       }
       try {
-        await Vault.saveScan(accountSession.key, activePlan);
+        await Vault.saveScan(accountSession.key, activePlan, accountSession.accountId);
         await renderHistory();
         saveAccountBtn.textContent = "Saved";
         setTimeout(() => {
