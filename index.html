@@ -78,11 +78,18 @@
     /* —— Home —— */
     #home {
       padding:
-        calc(20px + var(--safe-t))
-        calc(18px + var(--safe-r))
-        calc(36px + var(--safe-b))
-        calc(18px + var(--safe-l));
-      max-width: 40rem;
+        calc(16px + var(--safe-t))
+        0
+        calc(40px + var(--safe-b))
+        0;
+      max-width: none;
+      margin: 0;
+    }
+
+    .home-shell {
+      padding-left: calc(18px + var(--safe-l));
+      padding-right: calc(18px + var(--safe-r));
+      max-width: 44rem;
       margin: 0 auto;
     }
 
@@ -92,23 +99,39 @@
       justify-content: flex-end;
       gap: 8px;
       min-height: 44px;
-      margin: 0 0 8px;
+      margin: 0 0 4px;
     }
 
     .home-hero {
-      min-height: min(68dvh, 520px);
+      min-height: min(72dvh, 560px);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      gap: 18px;
-      padding-bottom: 28px;
+      gap: 16px;
+      padding: 24px 0 36px;
       animation: brandIn 0.85s var(--ease) both;
+      position: relative;
+    }
+
+    .home-hero::before {
+      content: "";
+      position: absolute;
+      left: -8%;
+      right: -8%;
+      bottom: 8%;
+      height: 55%;
+      background:
+        radial-gradient(ellipse 70% 80% at 30% 60%, rgba(94, 240, 168, 0.16), transparent 70%),
+        radial-gradient(ellipse 50% 60% at 78% 40%, rgba(45, 120, 95, 0.28), transparent 65%);
+      pointer-events: none;
+      z-index: -1;
+      animation: heroGlow 6s ease-in-out infinite alternate;
     }
 
     .brand {
       font-family: Syne, sans-serif;
       font-weight: 800;
-      font-size: clamp(3.4rem, 16vw, 5.5rem);
+      font-size: clamp(3.6rem, 17vw, 5.8rem);
       letter-spacing: -0.05em;
       line-height: 0.88;
       margin: 0;
@@ -118,19 +141,33 @@
       color: transparent;
     }
 
+    .home-headline {
+      margin: 0;
+      max-width: 18ch;
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.35rem, 4.8vw, 1.85rem);
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      color: var(--foam);
+      animation: brandIn 0.9s var(--ease) 0.06s both;
+    }
+
     .home-lead {
       margin: 0;
-      max-width: 22rem;
-      font-size: 1.05rem;
-      line-height: 1.45;
-      color: rgba(232, 245, 239, 0.72);
+      max-width: 28rem;
+      font-size: 1.02rem;
+      line-height: 1.5;
+      color: rgba(232, 245, 239, 0.68);
+      animation: brandIn 0.95s var(--ease) 0.12s both;
     }
 
     .home-cta {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 6px;
+      margin-top: 4px;
+      animation: brandIn 1s var(--ease) 0.18s both;
     }
 
     .build-stamp {
@@ -139,6 +176,232 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: rgba(232, 245, 239, 0.35);
+    }
+
+    /* Example reads rail */
+    .examples {
+      margin-top: 8px;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+      animation: brandIn 0.9s var(--ease) 0.1s both;
+    }
+
+    .examples-head {
+      padding-left: calc(18px + var(--safe-l));
+      padding-right: calc(18px + var(--safe-r));
+      max-width: 44rem;
+      margin: 0 auto 16px;
+    }
+
+    .examples-head h2 {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.35rem, 4vw, 1.7rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 6px;
+    }
+
+    .examples-head p {
+      margin: 0;
+      color: rgba(232, 245, 239, 0.62);
+      line-height: 1.45;
+      max-width: 34rem;
+    }
+
+    .examples-rail {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding:
+        4px calc(18px + var(--safe-r)) 8px calc(18px + var(--safe-l));
+      scrollbar-width: thin;
+      scrollbar-color: rgba(94, 240, 168, 0.35) transparent;
+    }
+
+    .examples-rail::-webkit-scrollbar { height: 6px; }
+    .examples-rail::-webkit-scrollbar-thumb {
+      background: rgba(94, 240, 168, 0.3);
+      border-radius: 3px;
+    }
+
+    .example-read {
+      flex: 0 0 min(72vw, 11.5rem);
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: brandIn 0.8s var(--ease) both;
+    }
+
+    .example-read:nth-child(1) { animation-delay: 0.05s; }
+    .example-read:nth-child(2) { animation-delay: 0.12s; }
+    .example-read:nth-child(3) { animation-delay: 0.19s; }
+    .example-read:nth-child(4) { animation-delay: 0.26s; }
+    .example-read:nth-child(5) { animation-delay: 0.33s; }
+    .example-read:nth-child(6) { animation-delay: 0.4s; }
+
+    .example-face {
+      aspect-ratio: 3 / 4;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      background: #0a1814;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .example-face::before {
+      content: "";
+      position: absolute;
+      inset: 12% 18% 8%;
+      border-radius: 48% 48% 42% 42%;
+      background:
+        radial-gradient(ellipse 55% 40% at 50% 28%, rgba(232, 245, 239, 0.18), transparent 70%),
+        linear-gradient(180deg, var(--skin-hi, #3a5a4e) 0%, var(--skin-lo, #1a3028) 100%);
+      opacity: 0.95;
+    }
+
+    .example-face::after {
+      content: "";
+      position: absolute;
+      left: 28%;
+      right: 28%;
+      top: 38%;
+      height: 22%;
+      background:
+        radial-gradient(ellipse 18% 10% at 28% 40%, rgba(7, 17, 15, 0.55), transparent 70%),
+        radial-gradient(ellipse 18% 10% at 72% 40%, rgba(7, 17, 15, 0.55), transparent 70%),
+        radial-gradient(ellipse 28% 14% at 50% 78%, rgba(7, 17, 15, 0.35), transparent 70%);
+      pointer-events: none;
+    }
+
+    .example-read[data-tone="warm"] .example-face {
+      --skin-hi: #5a6e4a;
+      --skin-lo: #24301c;
+    }
+
+    .example-read[data-tone="cool"] .example-face {
+      --skin-hi: #4a6a72;
+      --skin-lo: #1a2e34;
+    }
+
+    .example-read[data-tone="deep"] .example-face {
+      --skin-hi: #2e4638;
+      --skin-lo: #0e1a14;
+    }
+
+    .example-read[data-tone="fair"] .example-face {
+      --skin-hi: #6a8470;
+      --skin-lo: #2a4034;
+    }
+
+    .example-read[data-tone="olive"] .example-face {
+      --skin-hi: #5a7048;
+      --skin-lo: #24301c;
+    }
+
+    .example-read[data-tone="ash"] .example-face {
+      --skin-hi: #4e5e58;
+      --skin-lo: #1c2824;
+    }
+
+    .example-meta {
+      display: grid;
+      gap: 2px;
+    }
+
+    .example-meta .psl {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+      color: var(--mint);
+      line-height: 1;
+    }
+
+    .example-meta .tier {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: -0.01em;
+      color: var(--foam);
+    }
+
+    .example-meta .who {
+      font-size: 0.78rem;
+      color: rgba(232, 245, 239, 0.45);
+      margin-top: 2px;
+    }
+
+    /* What LOOK does */
+    .how {
+      margin-top: 40px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+      animation: brandIn 0.9s var(--ease) 0.14s both;
+    }
+
+    .how h2 {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.35rem, 4vw, 1.7rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 6px;
+    }
+
+    .how > p {
+      margin: 0 0 22px;
+      color: rgba(232, 245, 239, 0.62);
+      line-height: 1.45;
+      max-width: 34rem;
+    }
+
+    .how-steps {
+      display: grid;
+      gap: 0;
+      counter-reset: how;
+    }
+
+    .how-step {
+      counter-increment: how;
+      display: grid;
+      grid-template-columns: 2.5rem 1fr;
+      gap: 12px;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .how-step:last-child { border-bottom: 1px solid var(--line); }
+
+    .how-step::before {
+      content: counter(how, decimal-leading-zero);
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.03em;
+      color: var(--mint);
+      line-height: 1.2;
+      padding-top: 2px;
+    }
+
+    .how-step h3 {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin: 0 0 4px;
+      letter-spacing: -0.02em;
+    }
+
+    .how-step p {
+      margin: 0;
+      color: rgba(232, 245, 239, 0.68);
+      line-height: 1.45;
+      font-size: 0.94rem;
+    }
+
+    .how-cta {
+      margin-top: 22px;
     }
 
     .personal-banner {
@@ -1431,6 +1694,11 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes heroGlow {
+      from { opacity: 0.7; transform: scale(1); }
+      to { opacity: 1; transform: scale(1.04); }
+    }
+
     @keyframes viewportIn {
       from { opacity: 0; clip-path: inset(8% 4% 8% 4%); }
       to { opacity: 1; clip-path: inset(0 0 0 0); }
@@ -1444,6 +1712,8 @@
       .gate-copy .actions { flex-direction: column; }
       .gate-copy .actions button { width: 100%; }
       .home-cta button { flex: 1; min-width: 8rem; }
+      .home-hero { min-height: min(78dvh, 620px); }
+      .example-read { flex-basis: min(68vw, 10.5rem); }
 
       .results-bar {
         grid-template-columns: 1fr auto;
@@ -1488,69 +1758,159 @@
   <div class="grain" aria-hidden="true"></div>
 
   <main id="home" class="view" aria-label="Home">
-    <div class="top-utility" aria-label="Account tools">
-      <div class="hero-tools" id="authToolsHome">
-        <button type="button" class="settings-chip" id="settingsBtn">Settings</button>
-        <button type="button" class="auth-chip" id="loginBtn" hidden>Log in</button>
-        <button type="button" class="auth-chip primary-chip" id="signupBtn" hidden>Sign up</button>
-        <button type="button" class="profile-avatar-btn" id="profileBtn" hidden aria-label="Open profile">
-          <span class="avatar-fallback" id="profileFallback">?</span>
-          <img id="profileImg" alt="" hidden>
-        </button>
+    <div class="home-shell">
+      <div class="top-utility" aria-label="Account tools">
+        <div class="hero-tools" id="authToolsHome">
+          <button type="button" class="settings-chip" id="settingsBtn">Settings</button>
+          <button type="button" class="auth-chip" id="loginBtn" hidden>Log in</button>
+          <button type="button" class="auth-chip primary-chip" id="signupBtn" hidden>Sign up</button>
+          <button type="button" class="profile-avatar-btn" id="profileBtn" hidden aria-label="Open profile">
+            <span class="avatar-fallback" id="profileFallback">?</span>
+            <img id="profileImg" alt="" hidden>
+          </button>
+        </div>
+      </div>
+      <div class="home-hero">
+        <h1 class="brand">LOOK</h1>
+        <p class="home-headline">See your PSL. Know what moves it.</p>
+        <p class="home-lead">On-device face mocap rates you on the 1–8 scale, then builds a day-by-day plan from your read — nothing leaves your phone.</p>
+        <div class="home-cta">
+          <button type="button" id="goScanBtn">Scan my face</button>
+          <button type="button" class="ghost" id="goTipsBtn">Last results</button>
+        </div>
+        <p class="build-stamp" id="buildStamp">On-device account · no face uploads</p>
+        <p id="accountStatus" class="build-stamp" style="text-transform:none;letter-spacing:0.02em"></p>
       </div>
     </div>
-    <div class="home-hero">
-      <h1 class="brand">LOOK</h1>
-      <p class="home-lead">Scan → PSL score → improvement graph → a day-by-day plan with products and ingredients matched to your read.</p>
-      <div class="home-cta">
-        <button type="button" id="goScanBtn">Scan my face</button>
-        <button type="button" class="ghost" id="goTipsBtn">Last results</button>
+
+    <section class="examples" aria-labelledby="examples-title">
+      <div class="examples-head">
+        <h2 id="examples-title">Example reads</h2>
+        <p>Anonymized sample scores from the same on-device landmark pipeline — so you know what a LOOK result looks like before you scan.</p>
       </div>
-      <p class="build-stamp" id="buildStamp">On-device account · no face uploads</p>
-      <p id="accountStatus" class="build-stamp" style="text-transform:none;letter-spacing:0.02em"></p>
+      <div class="examples-rail" role="list">
+        <article class="example-read" data-tone="fair" role="listitem">
+          <div class="example-face" aria-hidden="true"></div>
+          <div class="example-meta">
+            <span class="psl">6.1</span>
+            <span class="tier">Chad lite</span>
+            <span class="who">Sample · high midface</span>
+          </div>
+        </article>
+        <article class="example-read" data-tone="olive" role="listitem">
+          <div class="example-face" aria-hidden="true"></div>
+          <div class="example-meta">
+            <span class="psl">4.4</span>
+            <span class="tier">High tier</span>
+            <span class="who">Sample · balanced thirds</span>
+          </div>
+        </article>
+        <article class="example-read" data-tone="cool" role="listitem">
+          <div class="example-face" aria-hidden="true"></div>
+          <div class="example-meta">
+            <span class="psl">3.2</span>
+            <span class="tier">Low tier</span>
+            <span class="who">Sample · soft jaw</span>
+          </div>
+        </article>
+        <article class="example-read" data-tone="deep" role="listitem">
+          <div class="example-face" aria-hidden="true"></div>
+          <div class="example-meta">
+            <span class="psl">5.4</span>
+            <span class="tier">Chad lite</span>
+            <span class="who">Sample · strong canthal tilt</span>
+          </div>
+        </article>
+        <article class="example-read" data-tone="ash" role="listitem">
+          <div class="example-face" aria-hidden="true"></div>
+          <div class="example-meta">
+            <span class="psl">2.1</span>
+            <span class="tier">Subhuman</span>
+            <span class="who">Sample · severe asymmetry</span>
+          </div>
+        </article>
+        <article class="example-read" data-tone="warm" role="listitem">
+          <div class="example-face" aria-hidden="true"></div>
+          <div class="example-meta">
+            <span class="psl">7.2</span>
+            <span class="tier">Chad</span>
+            <span class="who">Sample · elite harmony</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="home-shell">
+      <section class="how" aria-labelledby="how-title">
+        <h2 id="how-title">What LOOK does</h2>
+        <p>Same loop every time: capture landmarks, place you on the PSL ladder, then personalize levers you can actually move.</p>
+        <div class="how-steps">
+          <div class="how-step">
+            <div>
+              <h3>Scan on-device</h3>
+              <p>MediaPipe tracks 478 face points in your browser. Frames stay local — LOOK never uploads your face.</p>
+            </div>
+          </div>
+          <div class="how-step">
+            <div>
+              <h3>Lock a PSL 1–8</h3>
+              <p>Multi-sample ratios score symmetry, proportion, and harmony against a calibrated ladder. True Adam (8) stays unreachable by design.</p>
+            </div>
+          </div>
+          <div class="how-step">
+            <div>
+              <h3>Get a plan that fits</h3>
+              <p>Your graph, 7-day AM/PM routine, and product guide map to the gaps in your read — sleep, skin, grooming, expression.</p>
+            </div>
+          </div>
+        </div>
+        <div class="how-cta">
+          <button type="button" id="goScanBtnHow">Start a scan</button>
+        </div>
+      </section>
+
+      <section class="section" id="historySection" hidden aria-labelledby="history-title">
+        <h2 id="history-title">Previous results</h2>
+        <p>Encrypted on this device only. Tap a row to reopen that plan.</p>
+        <ul class="history-list" id="historyList"></ul>
+      </section>
+
+      <section class="section" id="tips" aria-labelledby="tips-title">
+        <h2 id="tips-title">Your plan</h2>
+        <div id="personalBanner" class="personal-banner">
+          <p class="empty-plan" id="planEmpty">No scan yet. Sign in, hit <strong>Scan my face</strong>, then <strong>Lock PSL</strong> for your graph, daily plan, and product guide.</p>
+        </div>
+        <div id="focusChips" class="focus-chips" hidden></div>
+        <div id="personalTips"></div>
+      </section>
+
+      <section class="section" id="routines" aria-labelledby="routines-title">
+        <h2 id="routines-title">Your 7-day plan</h2>
+        <p id="routineLead">After a scan, each day expands with AM/PM steps, products, and ingredients.</p>
+        <div id="personalRoutine"></div>
+        <p class="disclaimer">LOOK personalizes from on-device landmark geometry (symmetry / proportion / harmony / smile). It is not a medical or beauty diagnosis. Research citations describe general evidence; adapt care to your skin and clinician advice.</p>
+      </section>
+
+      <section class="section" id="foundation" aria-labelledby="foundation-title">
+        <h2 id="foundation-title">Why these levers</h2>
+        <p>Bone structure is mostly fixed. Ratings still move with sleep, skin, grooming, expression, and body composition.</p>
+        <article class="tip">
+          <h3>Sleep &amp; recovery</h3>
+          <p>Well-rested faces are rated more attractive and healthier; fatigue shows in under-eyes and droop within hours.</p>
+          <span class="cite">Axelsson et al. / sleep &amp; facial attractiveness</span>
+        </article>
+        <article class="tip">
+          <h3>Skin clarity</h3>
+          <p>Even tone and low inflammation are strong cross-cultural cues — SPF and gentle care beat unproven face exercises.</p>
+          <span class="cite">Dermatology; Fink / Jones skin homogeneity</span>
+        </article>
+        <article class="tip">
+          <h3>Expression &amp; grooming</h3>
+          <p>Genuine smiles and sharp grooming change ratings without changing bone — often the largest controllable deltas.</p>
+          <span class="cite">Social perception &amp; dental aesthetics reviews</span>
+        </article>
+      </section>
     </div>
-
-    <section class="section" id="historySection" hidden aria-labelledby="history-title">
-      <h2 id="history-title">Previous results</h2>
-      <p>Encrypted on this device only. Tap a row to reopen that plan.</p>
-      <ul class="history-list" id="historyList"></ul>
-    </section>
-
-    <section class="section" id="tips" aria-labelledby="tips-title">
-      <h2 id="tips-title">Your plan</h2>
-      <div id="personalBanner" class="personal-banner">
-        <p class="empty-plan" id="planEmpty">No scan yet. Sign in, hit <strong>Scan my face</strong>, then <strong>Lock PSL</strong> for your graph, daily plan, and product guide.</p>
-      </div>
-      <div id="focusChips" class="focus-chips" hidden></div>
-      <div id="personalTips"></div>
-    </section>
-
-    <section class="section" id="routines" aria-labelledby="routines-title">
-      <h2 id="routines-title">Your 7-day plan</h2>
-      <p id="routineLead">After a scan, each day expands with AM/PM steps, products, and ingredients.</p>
-      <div id="personalRoutine"></div>
-      <p class="disclaimer">LOOK personalizes from on-device landmark geometry (symmetry / proportion / harmony / smile). It is not a medical or beauty diagnosis. Research citations describe general evidence; adapt care to your skin and clinician advice.</p>
-    </section>
-
-    <section class="section" id="foundation" aria-labelledby="foundation-title">
-      <h2 id="foundation-title">Why these levers</h2>
-      <p>Bone structure is mostly fixed. Ratings still move with sleep, skin, grooming, expression, and body composition.</p>
-      <article class="tip">
-        <h3>Sleep &amp; recovery</h3>
-        <p>Well-rested faces are rated more attractive and healthier; fatigue shows in under-eyes and droop within hours.</p>
-        <span class="cite">Axelsson et al. / sleep &amp; facial attractiveness</span>
-      </article>
-      <article class="tip">
-        <h3>Skin clarity</h3>
-        <p>Even tone and low inflammation are strong cross-cultural cues — SPF and gentle care beat unproven face exercises.</p>
-        <span class="cite">Dermatology; Fink / Jones skin homogeneity</span>
-      </article>
-      <article class="tip">
-        <h3>Expression &amp; grooming</h3>
-        <p>Genuine smiles and sharp grooming change ratings without changing bone — often the largest controllable deltas.</p>
-        <span class="cite">Social perception &amp; dental aesthetics reviews</span>
-      </article>
-    </section>
   </main>
 
   <div id="scan" class="view" hidden aria-label="Face scan">
@@ -3754,6 +4114,8 @@
     });
 
     goScanBtn.addEventListener("click", showScan);
+    const goScanBtnHow = document.getElementById("goScanBtnHow");
+    if (goScanBtnHow) goScanBtnHow.addEventListener("click", showScan);
     goTipsBtn.addEventListener("click", () => {
       const plan = loadPlan();
       if (plan) showResults(plan);
