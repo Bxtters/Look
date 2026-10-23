@@ -1176,7 +1176,7 @@
     }
 
     video {
-      /* Front camera is shown unmirrored (as others see you) via the zoom canvas. */
+      /* Hidden — live preview is painted to #mesh (front cam mirrored, rear not). */
       opacity: 0;
       pointer-events: none;
       background: #000;
@@ -4174,7 +4174,11 @@
       faceZoom.scale = lerp(faceZoom.scale, targetScale, a);
     }
 
-    /** Face-centered crop for front camera — unmirrored, zoomed to cut selfie distortion. */
+    /**
+     * Face-centered crop for analysis + preview.
+     * Front camera is mirrored (selfie preview); rear camera is not.
+     * Demo stills use forceZoom without mirroring.
+     */
     function renderZoomedFrame(source, landmarks, opts) {
       const options = opts || {};
       const vw = source.videoWidth || source.naturalWidth || source.width;
@@ -4190,12 +4194,24 @@
       sx = clamp(sx, 0, Math.max(0, vw - crop));
       sy = clamp(sy, 0, Math.max(0, vh - crop));
 
+      // Mirror only the live front camera — rear stays natural; still demos stay natural.
+      const mirrorFront =
+        options.mirror === true ||
+        (options.mirror !== false &&
+          facingMode === "user" &&
+          !options.forceZoom &&
+          source &&
+          source.tagName === "VIDEO");
+
       const out = 720;
       zoomCanvas.width = out;
       zoomCanvas.height = out;
       zoomCtx.save();
       zoomCtx.clearRect(0, 0, out, out);
-      // Natural orientation (no mirror) — matches how others see you.
+      if (mirrorFront) {
+        zoomCtx.translate(out, 0);
+        zoomCtx.scale(-1, 1);
+      }
       zoomCtx.drawImage(source, sx, sy, crop, crop, 0, 0, out, out);
       zoomCtx.restore();
       return zoomCanvas;
@@ -4369,13 +4385,13 @@
           "Sampling face ratios " + rated.samples + "/" + SAMPLE_TARGET + " — keep still"
         );
       } else {
-        setStatus(
-          facingMode === "user"
-            ? "Stable read · " +
+      setStatus(
+        facingMode === "user"
+          ? "Stable read · " +
                 SAMPLE_TARGET +
-                " samples · face zoom · unmirrored"
-            : "Stable read · " + SAMPLE_TARGET + " samples · MediaPipe"
-        );
+                " samples · face zoom · front mirrored"
+            : "Stable read · " + SAMPLE_TARGET + " samples · rear camera"
+      );
       }
     }
 
