@@ -1,6 +1,6 @@
 # LOOK
 
-Face mocap attractiveness rater (1–10). On-device [MediaPipe Face Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js).
+Face mocap PSL rater on a 1–8 scale (8 = true Adam, unreachable). On-device [MediaPipe Face Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js).
 
 ## Phone (HTTPS)
 

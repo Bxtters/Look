@@ -1278,11 +1278,13 @@
       transform: scale(1.04);
     }
 
-    .score-value.tier-subhuman { font-size: clamp(2.2rem, 10vw, 3.6rem); letter-spacing: -0.03em; }
-    .score-value.tier-normie { font-size: clamp(2.4rem, 11vw, 4rem); letter-spacing: -0.03em; }
-    .score-value.tier-chadlite { font-size: clamp(2.2rem, 10vw, 3.6rem); letter-spacing: -0.03em; }
+    .score-value.tier-subhuman { font-size: clamp(1.7rem, 8vw, 2.8rem); letter-spacing: -0.03em; }
+    .score-value.tier-low-normie,
+    .score-value.tier-mid-normie,
+    .score-value.tier-high-normie { font-size: clamp(1.55rem, 7.2vw, 2.6rem); letter-spacing: -0.03em; }
+    .score-value.tier-chadlite { font-size: clamp(1.9rem, 8.5vw, 3.1rem); letter-spacing: -0.03em; }
     .score-value.tier-chad {
-      font-size: clamp(2.6rem, 12vw, 4.4rem);
+      font-size: clamp(2.2rem, 10vw, 3.6rem);
       letter-spacing: -0.03em;
       color: var(--mint);
     }
@@ -1303,10 +1305,10 @@
     }
 
     .psl-scale span {
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
+      font-size: 0.55rem;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      padding: 5px 8px;
+      padding: 4px 6px;
       border-radius: 999px;
       color: rgba(232, 245, 239, 0.42);
       box-shadow: inset 0 0 0 1px rgba(232, 245, 239, 0.12);
@@ -1321,10 +1323,12 @@
     }
 
     .results-hero .score-value.tier-subhuman,
-    .results-hero .score-value.tier-normie,
+    .results-hero .score-value.tier-low-normie,
+    .results-hero .score-value.tier-mid-normie,
+    .results-hero .score-value.tier-high-normie,
     .results-hero .score-value.tier-chadlite,
     .results-hero .score-value.tier-chad {
-      font-size: clamp(2.4rem, 12vw, 4.2rem);
+      font-size: clamp(1.7rem, 8.5vw, 3rem);
     }
 
     .bars {
@@ -1560,14 +1564,16 @@
 
       <div class="score-panel" id="scorePanel" hidden>
         <div class="score-panel-inner" id="scorePanelInner">
-          <p class="score-label">PSL scale</p>
+          <p class="score-label">PSL 1–8</p>
           <p class="score-value" id="scoreValue">—</p>
-          <p class="score-meta" id="scoreMeta">Hold still for a clean PSL read</p>
+          <p class="score-meta" id="scoreMeta">Hold still for a clean PSL read · 8 is true Adam</p>
           <div class="psl-scale" id="pslScaleLive" aria-hidden="true">
-            <span data-tier="subhuman">Subhuman</span>
-            <span data-tier="normie">Normie</span>
-            <span data-tier="chadlite">Chadlite</span>
-            <span data-tier="chad">Chad</span>
+            <span data-tier="subhuman" title="1–2.5">Subhuman</span>
+            <span data-tier="low-normie" title="2.5–3.5">Low tier</span>
+            <span data-tier="mid-normie" title="3.5–4.25">Mid tier</span>
+            <span data-tier="high-normie" title="4.25–5">High tier</span>
+            <span data-tier="chadlite" title="5–6.5">Chad lite</span>
+            <span data-tier="chad" title="6.5–8 · 8 is true Adam">Chad</span>
           </div>
           <div class="bars" aria-hidden="true">
             <div class="bar"><span>Symmetry</span><i id="barSym"></i></div>
@@ -1619,14 +1625,16 @@
     </div>
 
     <div class="results-hero">
-      <p class="score-label">PSL scale</p>
+      <p class="score-label">PSL 1–8</p>
       <p class="score-value" id="resultsScore">—</p>
-      <p class="score-meta" id="resultsMeta">From your face scan</p>
+      <p class="score-meta" id="resultsMeta">From your face scan · 8 is true Adam</p>
       <div class="psl-scale" id="pslScaleResults" aria-hidden="true">
-        <span data-tier="subhuman">Subhuman</span>
-        <span data-tier="normie">Normie</span>
-        <span data-tier="chadlite">Chadlite</span>
-        <span data-tier="chad">Chad</span>
+        <span data-tier="subhuman" title="1–2.5">Subhuman</span>
+        <span data-tier="low-normie" title="2.5–3.5">Low tier</span>
+        <span data-tier="mid-normie" title="3.5–4.25">Mid tier</span>
+        <span data-tier="high-normie" title="4.25–5">High tier</span>
+        <span data-tier="chadlite" title="5–6.5">Chad lite</span>
+        <span data-tier="chad" title="6.5–8 · 8 is true Adam">Chad</span>
       </div>
       <p class="narrative" id="resultsNarrative" hidden></p>
       <div class="results-bars" aria-hidden="true">
@@ -1970,7 +1978,10 @@
     const resBarSym = document.getElementById("resBarSym");
     const resBarProp = document.getElementById("resBarProp");
     const resBarHarm = document.getElementById("resBarHarm");
-    const PLAN_KEY = "look.personalPlan.v3";
+    const PLAN_KEY = "look.personalPlan.v4";
+    /** PSL scale is 1–8; 8 is true Adam and is physically unreachable. */
+    const PSL_TRUE_ADAM = 8;
+    const PSL_MAX = 7.99;
     let accountSession = null; // { accountId, displayName, key, profile, provider, email }
     let selectedAccountId = null;
     let cachedAccounts = [];
@@ -1998,7 +2009,15 @@
     let lastVideoTime = -1;
     let holdScore = false;
     let held = null;
-    let smooth = { score: 5, sym: 0.5, prop: 0.5, harm: 0.5, smile: 0, tier: "normie", tierLabel: "Normie" };
+    let smooth = {
+      score: 4,
+      sym: 0.5,
+      prop: 0.5,
+      harm: 0.5,
+      smile: 0,
+      tier: "mid-normie",
+      tierLabel: "Mid tier normie"
+    };
     let mode = "live";
     let runningMode = "VIDEO";
     let view = "home";
@@ -2207,8 +2226,8 @@
       if (sym < 0.62) tipIds.push("lighting", "hydration");
       if (prop < 0.58) tipIds.push("grooming", "posture");
       if (harm < 0.58 || smile < 0.25) tipIds.push("smile", "grooming");
-      if (score < 6.5) tipIds.push("skin", "sleep");
-      if (score >= 7.5 && tipIds.length < 2) tipIds.push("maintain", "skin");
+      if (score < 5.2) tipIds.push("skin", "sleep");
+      if (score >= 6 && tipIds.length < 2) tipIds.push("maintain", "skin");
 
       const seen = {};
       const ordered = [];
@@ -2253,7 +2272,7 @@
       });
       routine.push({
         title: "Night — repair",
-        detail: score < 6.8
+        detail: score < 5.4
           ? "Cleanse → simple treatment → moisturizer. Skip late alcohol; aim for 7–9 hours with a fixed wake time."
           : "Cleanse → treatment if you use one → moisturizer. Protect the baseline with sleep."
       });
@@ -2275,28 +2294,38 @@
           ? "PSL tier <strong>" +
             tierLabel +
             "</strong>. Prioritized interventions map to your lowest landmark-derived bars."
-          : "You’re on the PSL black-pill scale as <strong>" +
+          : "You’re on the PSL 1–8 scale as <strong>" +
             tierLabel +
-            "</strong>. We ranked habits by your weakest bars — climb the ladder with the plan below.";
+            "</strong>. True Adam is 8 and unreachable. We ranked habits by your weakest bars — climb with the plan below.";
       if (tier === "chad") {
         summary =
           tone === "clinical"
-            ? "PSL tier Chad — maintenance emphasis on sleep, photoprotection, and grooming consistency."
-            : "PSL tier <strong>Chad</strong> — protect the baseline with sleep, SPF, and sharp grooming.";
+            ? "PSL tier Chad (6.5–8) — maintenance emphasis on sleep, photoprotection, and grooming. True Adam (8) is unreachable."
+            : "PSL tier <strong>Chad</strong> — protect the baseline with sleep, SPF, and sharp grooming. Nobody hits true Adam (8).";
       } else if (tier === "chadlite") {
         summary =
           tone === "clinical"
-            ? "PSL tier Chadlite — polish and consistency are the nearest rung to Chad."
-            : "PSL tier <strong>Chadlite</strong> — expression, skin, and grooming can push you toward Chad.";
-      } else if (tier === "normie") {
+            ? "PSL tier Chad lite (5–6.5) — polish and consistency are the nearest rung to Chad."
+            : "PSL tier <strong>Chad lite</strong> — expression, skin, and grooming can push you toward Chad.";
+      } else if (tier === "high-normie") {
         summary =
           tone === "clinical"
-            ? "PSL tier Normie — recovery, framing, and body-composition levers dominate near-term mobility."
-            : "PSL tier <strong>Normie</strong> — sleep, silhouette, and smile are your fastest climb levers.";
+            ? "PSL tier High tier normie (4.25–5) — framing, skin, and expression close the gap to Chad lite."
+            : "PSL tier <strong>High tier normie</strong> — polish, smile, and consistency can push you into Chad lite.";
+      } else if (tier === "mid-normie") {
+        summary =
+          tone === "clinical"
+            ? "PSL tier Mid tier normie (3.5–4.25) — recovery, framing, and body-composition levers dominate near-term mobility."
+            : "PSL tier <strong>Mid tier normie</strong> — sleep, silhouette, and smile are your fastest climb levers.";
+      } else if (tier === "low-normie") {
+        summary =
+          tone === "clinical"
+            ? "PSL tier Low tier normie (2.5–3.5) — sleep debt, lighting, and basic grooming before advanced maxes."
+            : "PSL tier <strong>Low tier normie</strong> — lock sleep, light, and grooming before chasing higher rungs.";
       } else {
         summary =
           tone === "clinical"
-            ? "PSL tier Subhuman — prioritize sleep debt payoff, even lighting, and barrier-first skin."
+            ? "PSL tier Subhuman (1–2.5) — prioritize sleep debt payoff, even lighting, and barrier-first skin."
             : "PSL tier <strong>Subhuman</strong> — start with sleep, light, and basic grooming before chasing maxes.";
       }
 
@@ -2350,10 +2379,10 @@
         (weakHarm || smile < 0.3 ? 0.45 : 0.15) +
         (weakSym ? 0.25 : 0.08) +
         0.15;
-      const mid = (score < 7 ? 0.35 : 0.18) + (weakSym ? 0.12 : 0.05);
+      const mid = (score < 5.6 ? 0.35 : 0.18) + (weakSym ? 0.12 : 0.05);
       const slow = weakProp ? 0.55 : 0.2;
-      const totalLift = Math.min(2.2, Math.max(0.35, fast + mid + slow) * (score >= 8.5 ? 0.55 : 1));
-      const target = clamp(score + totalLift, score, 9.7);
+      const totalLift = Math.min(1.6, Math.max(0.28, fast + mid + slow) * (score >= 6.8 ? 0.55 : 1));
+      const target = clamp(score + totalLift, score, PSL_MAX);
 
       const primary = tips[0] || TIP_BANK.skin;
       const secondary = tips[1] || TIP_BANK.sleep;
@@ -2492,7 +2521,7 @@
       const pad = { l: 36 * dpr, r: 16 * dpr, t: 16 * dpr, b: 28 * dpr };
       const series = projectionSeries(plan, weeks);
       const minY = Math.max(1, Math.floor(plan.score) - 1);
-      const maxY = Math.min(10, Math.ceil(plan.lift.target) + 0.5);
+      const maxY = Math.min(PSL_TRUE_ADAM, Math.ceil(plan.lift.target) + 0.5);
       const plotW = w - pad.l - pad.r;
       const plotH = h - pad.t - pad.b;
 
@@ -2722,7 +2751,7 @@
       resultsMeta.textContent =
         "PSL " +
         Settings.formatScore(plan.score, userSettings.scoreDecimals) +
-        " · black-pill scale · locked";
+        " / 8 · true Adam is 8 · locked";
       applyTierClass(resultsScore, tier);
       paintPslScale(document.getElementById("pslScaleResults"), tier);
       const narr = document.getElementById("resultsNarrative");
@@ -3002,7 +3031,7 @@
           (holdScore ? "Locked · " : "") +
           "PSL " +
           Settings.formatScore(disp.score, userSettings.scoreDecimals) +
-          " · black-pill scale";
+          " / 8 · true Adam is 8";
         applyTierClass(scoreValue, tier);
         paintPslScale(document.getElementById("pslScaleLive"), tier);
         paintBars(disp.sym || smooth.sym, disp.prop || smooth.prop, disp.harm || smooth.harm);
@@ -3745,8 +3774,10 @@
       const harmony = clamp(lipBalance * 0.35 + cheekBalance * 0.35 + expression * 0.3, 0, 1);
 
       const composite = symmetry * 0.38 + proportion * 0.37 + harmony * 0.25;
-      let score = 1 + Math.pow(composite, 0.92) * 8.4;
-      score = clamp(score + ((noseTip.x * 17 + noseTip.y * 31) % 1) * 0.35 - 0.175, 1, 10);
+      // Map landmarks onto PSL 1–8; asymptote under true Adam (8).
+      let score = 1 + Math.pow(composite, 0.92) * 6.75;
+      score += ((noseTip.x * 17 + noseTip.y * 31) % 1) * 0.28 - 0.14;
+      score = clamp(score, 1, PSL_MAX);
 
       const tierInfo = pslTierFromScore(score);
       let label = tierInfo.label;
@@ -3766,12 +3797,18 @@
       };
     }
 
-    /** Looksmax / black-pill PSL tiers on a 1–10 read. */
+    /**
+     * Looksmax / black-pill PSL on a 1–8 read.
+     * 1–2.5 Subhuman · 2.5–3.5 Low tier normie · 3.5–4.25 Mid tier normie ·
+     * 4.25–5 High tier normie · 5–6.5 Chad lite · 6.5–8 Chad (8 = true Adam, unreachable).
+     */
     function pslTierFromScore(score) {
       const s = Number(score) || 0;
-      if (s < 5) return { tier: "subhuman", label: "Subhuman" };
-      if (s < 7) return { tier: "normie", label: "Normie" };
-      if (s < 8) return { tier: "chadlite", label: "Chadlite" };
+      if (s < 2.5) return { tier: "subhuman", label: "Subhuman" };
+      if (s < 3.5) return { tier: "low-normie", label: "Low tier normie" };
+      if (s < 4.25) return { tier: "mid-normie", label: "Mid tier normie" };
+      if (s < 5) return { tier: "high-normie", label: "High tier normie" };
+      if (s < 6.5) return { tier: "chadlite", label: "Chad lite" };
       return { tier: "chad", label: "Chad" };
     }
 
@@ -3784,7 +3821,16 @@
 
     function applyTierClass(el, tier) {
       if (!el) return;
-      el.classList.remove("tier-subhuman", "tier-normie", "tier-chadlite", "tier-chad", "is-hot");
+      el.classList.remove(
+        "tier-subhuman",
+        "tier-low-normie",
+        "tier-mid-normie",
+        "tier-high-normie",
+        "tier-normie",
+        "tier-chadlite",
+        "tier-chad",
+        "is-hot"
+      );
       if (tier) el.classList.add("tier-" + tier);
       if (tier === "chad") el.classList.add("is-hot");
     }
@@ -3823,7 +3869,7 @@
         ? (holdScore ? "Locked · " : "") +
           "PSL " +
           Settings.formatScore(display.score, userSettings.scoreDecimals) +
-          " · black-pill scale"
+          " / 8 · true Adam is 8"
         : "PSL hidden — sign up or log in";
       scorePanel.hidden = false;
       applyTierClass(scoreValue, loggedIn ? tier : null);
