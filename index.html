@@ -1941,17 +1941,45 @@
     }
 
     const L = {
-      forehead: 10, chin: 152, noseTip: 1, noseBridge: 6,
-      leftCheek: 234, rightCheek: 454,
-      leftEyeOuter: 33, leftEyeInner: 133, rightEyeOuter: 263, rightEyeInner: 362,
-      leftMouth: 61, rightMouth: 291, upperLip: 13, lowerLip: 14,
-      leftBrow: 70, rightBrow: 300
+      forehead: 10,
+      chin: 152,
+      glabella: 9,
+      noseTip: 1,
+      noseBridge: 6,
+      subnasale: 2,
+      leftCheek: 234,
+      rightCheek: 454,
+      leftJaw: 172,
+      rightJaw: 397,
+      leftTemple: 127,
+      rightTemple: 356,
+      leftGon: 58,
+      rightGon: 288,
+      leftEyeOuter: 33,
+      leftEyeInner: 133,
+      rightEyeOuter: 263,
+      rightEyeInner: 362,
+      leftEyeUpper: 159,
+      leftEyeLower: 145,
+      rightEyeUpper: 386,
+      rightEyeLower: 374,
+      leftMouth: 61,
+      rightMouth: 291,
+      upperLip: 13,
+      lowerLip: 14,
+      leftBrow: 70,
+      rightBrow: 300,
+      leftBrowPeak: 105,
+      rightBrowPeak: 334,
+      leftNoseWing: 98,
+      rightNoseWing: 327
     };
 
     const PAIR_SYMMETRY = [
       [33, 263], [133, 362], [61, 291], [234, 454],
       [70, 300], [107, 336], [55, 285], [46, 276],
-      [7, 287], [172, 397], [58, 288], [132, 361]
+      [7, 287], [172, 397], [58, 288], [132, 361],
+      [98, 327], [127, 356], [105, 334], [159, 386], [145, 374]
     ];
 
     const home = document.getElementById("home");
@@ -1985,28 +2013,64 @@
     const PSL_TRUE_ADAM = 8;
     const PSL_MAX = 7.99;
     /**
-     * Scale anchor — MediaPipe ratios from the high-Chad-lite reference face
-     * (face-zoomed crop). A face matching these lands at `score` (high Chad lite).
-     * Everything else is graded by similarity to this profile.
+     * Scale anchor — expanded MediaPipe ratios from the high-Chad-lite reference
+     * face (face-zoomed). Similarity is strict; only near-matches reach his score.
      */
     const REF_PSL = {
       score: 6.25,
+      // Self-match after multi-sample average on the reference pipeline.
+      selfMatch: 0.9,
       heightWidth: 1.237,
       thirdsTop: 0.327,
       thirdsMid: 0.215,
       thirdsLow: 0.544,
       eyeSpacing: 2.158,
+      interocularFW: 0.458,
       mouthToEyes: 0.874,
       noseToFace: 0.215,
+      noseToMouth: 0.606,
       jawDominance: 0.808,
+      jawToCheek: 0.819,
+      templeToCheek: 1.01,
       browRatio: 0.872,
+      browEye: 0.177,
+      eyeAperture: 0.256,
       cheekBalance: 2.182,
-      // Outer corner higher than inner (normalized face units).
       canthalLift: 0.008,
-      symmetry: 0.916,
-      // Observed self-match of this face through the live face-zoom pipeline.
-      selfMatch: 0.92
+      philtrum: 0.227,
+      midLower: 0.811,
+      chinProj: -0.252,
+      symmetry: 0.928
     };
+    /**
+     * Tolerances for near() — discriminative cues (mouth, chin z, eye spacing)
+     * stay tight; shared structure cues are wider so average faces don't floor.
+     */
+    const REF_TOL = {
+      heightWidth: 0.18,
+      thirdsTop: 0.07,
+      thirdsMid: 0.055,
+      thirdsLow: 0.08,
+      eyeSpacing: 0.16,
+      interocularFW: 0.055,
+      mouthToEyes: 0.18,
+      noseToFace: 0.055,
+      noseToMouth: 0.1,
+      jawDominance: 0.12,
+      jawToCheek: 0.07,
+      templeToCheek: 0.09,
+      browRatio: 0.1,
+      browEye: 0.05,
+      eyeAperture: 0.06,
+      cheekBalance: 0.16,
+      canthalLift: 0.01,
+      philtrum: 0.055,
+      midLower: 0.12,
+      chinProj: 0.1,
+      symmetry: 0.14
+    };
+    const METRIC_KEYS = Object.keys(REF_TOL);
+    const SAMPLE_TARGET = 12;
     let accountSession = null; // { accountId, displayName, key, profile, provider, email }
     let selectedAccountId = null;
     let cachedAccounts = [];
@@ -2038,6 +2102,7 @@
     const zoomCanvas = document.createElement("canvas");
     const zoomCtx = zoomCanvas.getContext("2d", { willReadFrequently: true });
     let faceZoom = { cx: 0.5, cy: 0.42, scale: 1.35 };
+    let metricSamples = [];
     let smooth = {
       score: 4,
       sym: 0.5,
@@ -3736,28 +3801,47 @@
       return 0;
     }
 
-    function rateFace(landmarks, blendshapes) {
+    function measureFace(landmarks) {
       const lm = landmarks;
-      const forehead = lm[L.forehead];
-      const chin = lm[L.chin];
-      const leftCheek = lm[L.leftCheek];
-      const rightCheek = lm[L.rightCheek];
-      const noseTip = lm[L.noseTip];
-      const noseBridge = lm[L.noseBridge];
-      const leftEyeOuter = lm[L.leftEyeOuter];
-      const leftEyeInner = lm[L.leftEyeInner];
-      const rightEyeOuter = lm[L.rightEyeOuter];
-      const rightEyeInner = lm[L.rightEyeInner];
-      const leftMouth = lm[L.leftMouth];
-      const rightMouth = lm[L.rightMouth];
-      const leftBrow = lm[L.leftBrow];
-      const rightBrow = lm[L.rightBrow];
+      const g = (key) => lm[L[key]];
+      const forehead = g("forehead");
+      const chin = g("chin");
+      const leftCheek = g("leftCheek");
+      const rightCheek = g("rightCheek");
+      if (!forehead || !chin || !leftCheek || !rightCheek) return null;
 
-      const faceHeight = dist(forehead, chin);
-      const faceWidth = dist(leftCheek, rightCheek);
-      if (faceHeight < 1e-4 || faceWidth < 1e-4) {
-        return { score: 0, sym: 0, prop: 0, harm: 0, label: "Move closer" };
-      }
+      const faceH = dist(forehead, chin);
+      const bizyg = dist(leftCheek, rightCheek);
+      if (faceH < 1e-4 || bizyg < 1e-4) return null;
+
+      const eyeL = mid(g("leftEyeOuter"), g("leftEyeInner"));
+      const eyeR = mid(g("rightEyeOuter"), g("rightEyeInner"));
+      const eyeSpan = dist(eyeL, eyeR);
+      const eyeW =
+        (dist(g("leftEyeOuter"), g("leftEyeInner")) +
+          dist(g("rightEyeOuter"), g("rightEyeInner"))) /
+        2;
+      const eyeAperture =
+        (dist(g("leftEyeUpper"), g("leftEyeLower")) +
+          dist(g("rightEyeUpper"), g("rightEyeLower"))) /
+        2;
+      const mouthW = dist(g("leftMouth"), g("rightMouth"));
+      const noseW = dist(g("leftNoseWing"), g("rightNoseWing"));
+      const noseLen = dist(g("noseBridge"), g("noseTip"));
+      const browSpan = dist(g("leftBrow"), g("rightBrow"));
+      const browEye =
+        (dist(g("leftBrowPeak"), eyeL) + dist(g("rightBrowPeak"), eyeR)) / 2;
+      const midface = dist(g("glabella"), g("subnasale"));
+      const lowerFace = dist(g("subnasale"), chin);
+      const bigonial = dist(g("leftJaw"), g("rightJaw"));
+      const templeW = dist(g("leftTemple"), g("rightTemple"));
+      const philtrum = dist(g("noseTip"), g("upperLip"));
+      const canthalLift =
+        (g("leftEyeInner").y -
+          g("leftEyeOuter").y +
+          (g("rightEyeInner").y - g("rightEyeOuter").y)) /
+        2;
+      const chinProj = (g("noseTip").z || 0) - (chin.z || 0);
 
       const midlineX = (forehead.x + chin.x) / 2;
       let symErr = 0;
@@ -3772,77 +3856,165 @@
         symErr += Math.abs(da - db) / avg;
         symN++;
       }
-      const symmetry = clamp(1 - (symErr / Math.max(symN, 1)) * 1.15, 0, 1);
 
-      const heightWidth = faceHeight / faceWidth;
-      const thirdsTop = dist(forehead, noseBridge) / faceHeight;
-      const thirdsMid = dist(noseBridge, noseTip) / faceHeight;
-      const thirdsLow = dist(noseTip, chin) / faceHeight;
-      const eyeL = mid(leftEyeOuter, leftEyeInner);
-      const eyeR = mid(rightEyeOuter, rightEyeInner);
-      const eyeSpan = dist(eyeL, eyeR);
-      const eyeWidth = (dist(leftEyeOuter, leftEyeInner) + dist(rightEyeOuter, rightEyeInner)) / 2;
-      const mouthWidth = dist(leftMouth, rightMouth);
-      const noseLength = dist(noseBridge, noseTip);
-      const browSpan = dist(leftBrow, rightBrow);
-      const jawDominance = faceWidth / (faceHeight || 1e-6);
-      // Positive when outer corners sit higher than inners (image y grows downward).
-      const canthalLift =
-        (leftEyeInner.y - leftEyeOuter.y + (rightEyeInner.y - rightEyeOuter.y)) / 2;
+      return {
+        heightWidth: faceH / bizyg,
+        thirdsTop: dist(forehead, g("noseBridge")) / faceH,
+        thirdsMid: dist(g("noseBridge"), g("noseTip")) / faceH,
+        thirdsLow: dist(g("noseTip"), chin) / faceH,
+        eyeSpacing: eyeSpan / (eyeW || 1e-6),
+        interocularFW: eyeSpan / bizyg,
+        mouthToEyes: mouthW / (eyeSpan || 1e-6),
+        noseToFace: noseLen / faceH,
+        noseToMouth: noseW / (mouthW || 1e-6),
+        jawDominance: bizyg / faceH,
+        jawToCheek: bigonial / bizyg,
+        templeToCheek: templeW / bizyg,
+        browRatio: browSpan / bizyg,
+        browEye: browEye / faceH,
+        eyeAperture: eyeAperture / (eyeW || 1e-6),
+        cheekBalance: bizyg / (eyeSpan || 1e-6),
+        canthalLift,
+        philtrum: philtrum / faceH,
+        midLower: midface / (lowerFace || 1e-6),
+        chinProj,
+        symmetry: clamp(1 - (symErr / Math.max(symN, 1)) * 1.1, 0, 1)
+      };
+    }
 
-      // Similarity to the high-Chad-lite reference ratios (REF_PSL).
-      const R = REF_PSL;
-      const matchHeight = near(heightWidth, R.heightWidth, 0.38);
-      const matchThirds =
-        (near(thirdsTop, R.thirdsTop, 0.12) +
-          near(thirdsMid, R.thirdsMid, 0.12) +
-          near(thirdsLow, R.thirdsLow, 0.16)) /
-        3;
-      const matchEyes = near(eyeSpan / (eyeWidth || 1e-6), R.eyeSpacing, 0.65);
-      const matchMouth = near(mouthWidth / (eyeSpan || 1e-6), R.mouthToEyes, 0.35);
-      const matchNose = near(noseLength / faceHeight, R.noseToFace, 0.1);
-      const matchJaw = near(jawDominance, R.jawDominance, 0.2);
-      const matchBrow = near(browSpan / (faceWidth || 1e-6), R.browRatio, 0.22);
-      const matchCanthal = near(canthalLift, R.canthalLift, 0.05);
-      const matchCheek = near(faceWidth / (eyeSpan || 1e-6), R.cheekBalance, 0.55);
-      const matchSym = near(symmetry, R.symmetry, 0.22);
+    function averageMetrics(samples) {
+      if (!samples || !samples.length) return null;
+      const out = {};
+      for (let i = 0; i < METRIC_KEYS.length; i++) {
+        const k = METRIC_KEYS[i];
+        let s = 0;
+        let n = 0;
+        for (let j = 0; j < samples.length; j++) {
+          const v = samples[j][k];
+          if (typeof v === "number" && !Number.isNaN(v)) {
+            s += v;
+            n++;
+          }
+        }
+        out[k] = n ? s / n : REF_PSL[k];
+      }
+      return out;
+    }
 
+    function pushMetricSample(metrics) {
+      if (!metrics) return;
+      metricSamples.push(metrics);
+      if (metricSamples.length > SAMPLE_TARGET) metricSamples.shift();
+    }
+
+    function resetMetricSamples() {
+      metricSamples = [];
+    }
+
+    function matchMetricsToRef(metrics) {
+      if (!metrics) return { match: 0, proportion: 0, harmony: 0, symmetry: 0 };
+      // Heavier weights on cues that separate the anchor from average faces.
+      const weights = {
+        heightWidth: 0.04,
+        thirdsTop: 0.04,
+        thirdsMid: 0.06,
+        thirdsLow: 0.06,
+        eyeSpacing: 0.08,
+        interocularFW: 0.05,
+        mouthToEyes: 0.1,
+        noseToFace: 0.04,
+        noseToMouth: 0.03,
+        jawDominance: 0.05,
+        jawToCheek: 0.06,
+        templeToCheek: 0.03,
+        browRatio: 0.04,
+        browEye: 0.05,
+        eyeAperture: 0.06,
+        cheekBalance: 0.07,
+        canthalLift: 0.05,
+        philtrum: 0.05,
+        midLower: 0.03,
+        chinProj: 0.08,
+        symmetry: 0.07
+      };
+      let sum = 0;
+      let wSum = 0;
+      for (let i = 0; i < METRIC_KEYS.length; i++) {
+        const k = METRIC_KEYS[i];
+        const w = weights[k] || 0.03;
+        const m = near(metrics[k], REF_PSL[k], REF_TOL[k]);
+        sum += m * w;
+        wSum += w;
+      }
+      const match = clamp(sum / (wSum || 1), 0, 1);
       const proportion = clamp(
-        matchHeight * 0.14 +
-          matchThirds * 0.18 +
-          matchEyes * 0.14 +
-          matchMouth * 0.1 +
-          matchNose * 0.08 +
-          matchJaw * 0.18 +
-          matchBrow * 0.06 +
-          matchCanthal * 0.12,
+        (near(metrics.mouthToEyes, REF_PSL.mouthToEyes, REF_TOL.mouthToEyes) +
+          near(metrics.jawToCheek, REF_PSL.jawToCheek, REF_TOL.jawToCheek) +
+          near(metrics.eyeSpacing, REF_PSL.eyeSpacing, REF_TOL.eyeSpacing) +
+          near(metrics.chinProj, REF_PSL.chinProj, REF_TOL.chinProj) +
+          near(metrics.thirdsMid, REF_PSL.thirdsMid, REF_TOL.thirdsMid) +
+          near(metrics.eyeAperture, REF_PSL.eyeAperture, REF_TOL.eyeAperture)) /
+          6,
         0,
         1
       );
+      const harmony = clamp(
+        (near(metrics.cheekBalance, REF_PSL.cheekBalance, REF_TOL.cheekBalance) +
+          near(metrics.canthalLift, REF_PSL.canthalLift, REF_TOL.canthalLift) +
+          near(metrics.browEye, REF_PSL.browEye, REF_TOL.browEye) +
+          near(metrics.philtrum, REF_PSL.philtrum, REF_TOL.philtrum)) /
+          4,
+        0,
+        1
+      );
+      return { match, proportion, harmony, symmetry: metrics.symmetry };
+    }
 
+    function scoreFromMatch(match) {
+      const m = clamp(match, 0, 1);
+      const anchor = REF_PSL.score;
+      const self = REF_PSL.selfMatch;
+      // Piecewise ladder — stops everything clustering in Chad lite.
+      //  ~0.35 subhuman/low · ~0.55 mid normie · ~0.70 high normie · ~self high Chad lite
+      let score;
+      if (m < 0.4) {
+        score = 1.2 + (m / 0.4) * (2.6 - 1.2);
+      } else if (m < 0.55) {
+        score = 2.6 + ((m - 0.4) / 0.15) * (3.7 - 2.6);
+      } else if (m < 0.68) {
+        score = 3.7 + ((m - 0.55) / 0.13) * (4.7 - 3.7);
+      } else if (m < self) {
+        score = 4.7 + ((m - 0.68) / Math.max(1e-6, self - 0.68)) * (anchor - 4.7);
+      } else {
+        score = anchor + ((m - self) / Math.max(1e-6, 1 - self)) * (6.9 - anchor);
+      }
+      return clamp(score, 1, PSL_MAX);
+    }
+
+    function rateFace(landmarks, blendshapes, opts) {
+      const options = opts || {};
+      const measured = measureFace(landmarks);
+      if (!measured) {
+        return { score: 0, sym: 0, prop: 0, harm: 0, label: "Move closer" };
+      }
+
+      if (options.resetSamples) resetMetricSamples();
+      if (options.record !== false) pushMetricSample(measured);
+
+      const samples =
+        options.forceMetrics ||
+        (metricSamples.length ? averageMetrics(metricSamples) : measured);
+      const { match, proportion, harmony, symmetry } = matchMetricsToRef(samples);
       const smile =
         (blend(blendshapes, "mouthSmileLeft") + blend(blendshapes, "mouthSmileRight")) / 2;
       const openJaw = blend(blendshapes, "jawOpen");
-      const expression = clamp(0.72 + smile * 0.2 - openJaw * 0.4, 0, 1);
-      // Skip unstable closed-mouth lip height; cheek width vs eyes carries harmony.
-      const harmony = clamp(matchCheek * 0.55 + matchMouth * 0.15 + expression * 0.3, 0, 1);
+      // Expression is a small polish term — structure dominates PSL.
+      const expression = clamp(0.55 + smile * 0.25 - openJaw * 0.35, 0, 1);
+      const harm = clamp(harmony * 0.82 + expression * 0.18, 0, 1);
 
-      // 1.0 ≈ same ratio profile as the reference guy.
-      const match = clamp(
-        matchSym * 0.2 + proportion * 0.52 + harmony * 0.28,
-        0,
-        1
-      );
-
-      // Anchor the whole 1–8 ladder on him: his live self-match → high Chad lite (6.25).
-      // Slightly above him can climb toward Chad; 8 (true Adam) stays unreachable.
-      const anchor = R.score;
-      const self = R.selfMatch;
-      let score = 1.1 + (match / self) * (anchor - 1.1);
-      if (match >= self) {
-        score = anchor + ((match - self) / Math.max(1e-6, 1 - self)) * (6.85 - anchor);
-      }
-      score = clamp(score, 1, PSL_MAX);
+      let score = scoreFromMatch(match);
+      // Tiny smile polish that cannot jump a tier by itself.
+      if (smile > 0.45) score = clamp(score + 0.08, 1, PSL_MAX);
 
       const tierInfo = pslTierFromScore(score);
       let label = tierInfo.label;
@@ -3850,15 +4022,18 @@
         label = tierInfo.label + " · smile lift";
       }
 
+      const sampleCount = metricSamples.length;
       return {
         score,
         sym: symmetry,
         prop: proportion,
-        harm: harmony,
+        harm,
         smile,
         label,
         tier: tierInfo.tier,
-        tierLabel: tierInfo.label
+        tierLabel: tierInfo.label,
+        match,
+        samples: sampleCount
       };
     }
 
@@ -3930,18 +4105,21 @@
       const tierLabel = display.tierLabel || tierInfo.label;
       const loggedIn = !!accountSession;
       scoreValue.textContent = loggedIn ? tierLabel.toUpperCase() : "••";
+      const nSamples = result.samples || metricSamples.length || 0;
+      const ready = nSamples >= SAMPLE_TARGET;
       scoreMeta.textContent = loggedIn
-        ? (holdScore ? "Locked · " : "") +
+        ? (holdScore ? "Locked · " : ready ? "" : "Sampling " + nSamples + "/" + SAMPLE_TARGET + " · ") +
           "PSL " +
           Settings.formatScore(display.score, userSettings.scoreDecimals) +
-          " / 8 · true Adam is 8"
+          " / 8 · " +
+          (ready || holdScore ? "true Adam is 8" : "keep still")
         : "PSL hidden — sign up or log in";
       scorePanel.hidden = false;
       applyTierClass(scoreValue, loggedIn ? tier : null);
       paintPslScale(document.getElementById("pslScaleLive"), loggedIn ? tier : null);
       if (loggedIn) paintBars(display.sym, display.prop, display.harm);
       else paintBars(0.15, 0.15, 0.15);
-      lockScoreBtn.disabled = !loggedIn;
+      lockScoreBtn.disabled = !loggedIn || (!holdScore && !ready);
       updateScoreAuthGate();
     }
 
@@ -4143,6 +4321,7 @@
       video.setAttribute("webkit-playsinline", "");
       await video.play();
       lastLandmarks = null;
+      resetMetricSamples();
       faceZoom = { cx: 0.5, cy: 0.42, scale: facingMode === "user" ? 1.4 : 1.1 };
       canvas.style.transform = "none";
       gate.hidden = true;
@@ -4150,7 +4329,7 @@
       lockScoreBtn.disabled = true;
       setStatus(
         accountSession
-          ? "Face the camera — face zoom reduces selfie distortion. Lock when PSL settles."
+          ? "Hold still — gathering landmark samples for a stable PSL."
           : "Face the camera — sign up or log in to reveal and lock your PSL."
       );
     }
@@ -4185,11 +4364,19 @@
       const rated = rateFace(faces[0], result.faceBlendshapes);
       if (!holdScore) held = { ...rated };
       showScore(rated);
-      setStatus(
-        facingMode === "user"
-          ? "Face zoom on · unmirrored front camera · MediaPipe"
-          : "Tracking 478 face landmarks · MediaPipe Face Landmarker"
-      );
+      if (rated.samples < SAMPLE_TARGET) {
+        setStatus(
+          "Sampling face ratios " + rated.samples + "/" + SAMPLE_TARGET + " — keep still"
+        );
+      } else {
+        setStatus(
+          facingMode === "user"
+            ? "Stable read · " +
+                SAMPLE_TARGET +
+                " samples · face zoom · unmirrored"
+            : "Stable read · " + SAMPLE_TARGET + " samples · MediaPipe"
+        );
+      }
     }
 
     async function runDemo() {
@@ -4209,7 +4396,10 @@
         video.hidden = true;
         demoImg.hidden = true;
         canvas.style.transform = "none";
+        resetMetricSamples();
         faceZoom = { cx: 0.5, cy: 0.42, scale: 1.45 };
+        // Fresh detect after src swaps — avoid reusing a prior still.
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
         let result = faceLandmarker.detect(demoImg);
         let faces = result.faceLandmarks || [];
         gate.hidden = true;
@@ -4219,18 +4409,53 @@
           demoImg.hidden = false;
           return;
         }
-        // Face-zoom the still too — same distortion correction as live front cam.
-        const framed = renderZoomedFrame(demoImg, faces[0], { forceZoom: true });
-        if (framed) {
-          result = faceLandmarker.detect(framed);
-          faces = result.faceLandmarks || faces;
+        const seedFace = faces[0];
+        // Multi-sample with slight zoom / center jitter for a stabler still read.
+        const jitters = [
+          { s: 0, cx: 0, cy: 0 },
+          { s: 0.06, cx: 0.01, cy: -0.01 },
+          { s: -0.05, cx: -0.01, cy: 0.01 },
+          { s: 0.08, cx: 0, cy: 0.015 },
+          { s: -0.07, cx: 0.015, cy: 0 },
+          { s: 0.04, cx: -0.012, cy: -0.008 },
+          { s: -0.04, cx: 0.008, cy: 0.012 },
+          { s: 0.1, cx: 0, cy: 0 },
+          { s: -0.08, cx: -0.01, cy: -0.01 },
+          { s: 0.05, cx: 0.01, cy: 0.01 },
+          { s: -0.03, cx: 0, cy: -0.015 },
+          { s: 0.07, cx: -0.008, cy: 0.008 }
+        ];
+        let framed = null;
+        let lastShapes = result.faceBlendshapes;
+        for (let i = 0; i < jitters.length; i++) {
+          const j = jitters[i];
+          faceZoom.scale = clamp(1.45 + j.s, 1.2, 1.85);
+          faceZoom.cx = clamp(0.5 + j.cx, 0.35, 0.65);
+          faceZoom.cy = clamp(0.42 + j.cy, 0.3, 0.55);
+          const crop = renderZoomedFrame(demoImg, seedFace, { forceZoom: true });
+          if (!crop) continue;
+          const r = faceLandmarker.detect(crop);
+          const f = r.faceLandmarks && r.faceLandmarks[0];
+          if (!f) continue;
+          framed = crop;
+          faces = [f];
+          lastShapes = r.faceBlendshapes || lastShapes;
+          rateFace(f, lastShapes, { record: true });
+        }
+        if (!framed) {
+          framed = renderZoomedFrame(demoImg, faces[0], { forceZoom: true });
+          if (framed) {
+            result = faceLandmarker.detect(framed);
+            faces = result.faceLandmarks || faces;
+            lastShapes = result.faceBlendshapes;
+          }
         }
         try {
           drawFrame(faces[0], framed.width, framed.height, framed);
         } catch (drawErr) {
           console.warn("Mesh draw skipped", drawErr);
         }
-        const rated = rateFace(faces[0], result.faceBlendshapes);
+        const rated = rateFace(faces[0], lastShapes, { record: true });
         held = { ...rated };
         smooth = {
           score: rated.score,
@@ -4242,7 +4467,11 @@
           tierLabel: rated.tierLabel
         };
         showScore(rated);
-        setStatus("Sample face · MediaPipe Face Landmarker (IMAGE mode)");
+        setStatus(
+          "Sample face · " +
+            metricSamples.length +
+            " ratio samples · MediaPipe IMAGE"
+        );
       } catch (err) {
         console.error(err);
         setStatus((err && err.message) || "Demo failed.", "warn");
