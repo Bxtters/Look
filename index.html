@@ -1176,9 +1176,9 @@
     }
 
     video {
-      transform: scaleX(-1);
-      opacity: 0.92;
-      filter: saturate(0.85) contrast(1.05);
+      /* Front camera is shown unmirrored (as others see you) via the zoom canvas. */
+      opacity: 0;
+      pointer-events: none;
       background: #000;
     }
 
@@ -1189,9 +1189,11 @@
     }
 
     #mesh {
-      transform: scaleX(-1);
       z-index: 1;
       pointer-events: none;
+      transform: none;
+      filter: saturate(0.9) contrast(1.04);
+      background: #000;
     }
 
     .score-panel {
@@ -2009,6 +2011,10 @@
     let lastVideoTime = -1;
     let holdScore = false;
     let held = null;
+    let lastLandmarks = null;
+    const zoomCanvas = document.createElement("canvas");
+    const zoomCtx = zoomCanvas.getContext("2d", { willReadFrequently: true });
+    let faceZoom = { cx: 0.5, cy: 0.42, scale: 1.35 };
     let smooth = {
       score: 4,
       sym: 0.5,
@@ -3723,6 +3729,8 @@
       const rightMouth = lm[L.rightMouth];
       const upperLip = lm[L.upperLip];
       const lowerLip = lm[L.lowerLip];
+      const leftBrow = lm[L.leftBrow];
+      const rightBrow = lm[L.rightBrow];
 
       const faceHeight = dist(forehead, chin);
       const faceWidth = dist(leftCheek, rightCheek);
@@ -3743,7 +3751,7 @@
         symErr += Math.abs(da - db) / avg;
         symN++;
       }
-      const symmetry = clamp(1 - (symErr / Math.max(symN, 1)) * 1.35, 0, 1);
+      const symmetry = clamp(1 - (symErr / Math.max(symN, 1)) * 1.15, 0, 1);
 
       const heightWidth = faceHeight / faceWidth;
       const thirdsTop = dist(forehead, noseBridge) / faceHeight;
@@ -3756,27 +3764,53 @@
       const mouthWidth = dist(leftMouth, rightMouth);
       const noseLength = dist(noseBridge, noseTip);
       const mouthHeight = dist(upperLip, lowerLip);
+      const browSpan = dist(leftBrow, rightBrow);
+      const jawDominance = faceWidth / (faceHeight || 1e-6);
+      // Positive canthal tilt (outer corners higher) — hunter-eye cue
+      const canthalL = Math.atan2(leftEyeOuter.y - leftEyeInner.y, leftEyeOuter.x - leftEyeInner.x);
+      const canthalR = Math.atan2(rightEyeInner.y - rightEyeOuter.y, rightEyeInner.x - rightEyeOuter.x);
+      const canthalTilt = (-canthalL + canthalR) / 2;
 
-      const golden = near(heightWidth, 1.618, 0.45);
+      // Idealized masculine / high-chadlite bands (after face-zoom crop).
+      const golden = near(heightWidth, 1.35, 0.42);
       const thirds =
-        (near(thirdsTop, 0.33, 0.12) + near(thirdsMid + thirdsLow, 0.67, 0.14)) / 2;
-      const eyeSpacing = near(eyeSpan / (eyeWidth || 1e-6), 1.55, 0.55);
-      const mouthToEyes = near(mouthWidth / (eyeSpan || 1e-6), 1.05, 0.35);
-      const noseToFace = near(noseLength / faceHeight, 0.22, 0.1);
-      const proportion = golden * 0.28 + thirds * 0.22 + eyeSpacing * 0.22 + mouthToEyes * 0.16 + noseToFace * 0.12;
+        (near(thirdsTop, 0.32, 0.11) +
+          near(thirdsMid, 0.3, 0.1) +
+          near(thirdsLow, 0.38, 0.12)) /
+        3;
+      const eyeSpacing = near(eyeSpan / (eyeWidth || 1e-6), 1.45, 0.5);
+      const mouthToEyes = near(mouthWidth / (eyeSpan || 1e-6), 1.0, 0.32);
+      const noseToFace = near(noseLength / faceHeight, 0.2, 0.09);
+      const jawScore = near(jawDominance, 0.78, 0.22);
+      const browScore = near(browSpan / (faceWidth || 1e-6), 0.72, 0.2);
+      const canthalScore = clamp(0.55 + canthalTilt * 8, 0, 1);
+      const proportion = clamp(
+        golden * 0.16 +
+          thirds * 0.2 +
+          eyeSpacing * 0.16 +
+          mouthToEyes * 0.12 +
+          noseToFace * 0.1 +
+          jawScore * 0.16 +
+          browScore * 0.05 +
+          canthalScore * 0.05,
+        0,
+        1
+      );
 
-      const lipBalance = near(mouthWidth / (mouthHeight || 1e-6), 3.2, 1.6);
-      const cheekBalance = near(faceWidth / eyeSpan, 2.05, 0.55);
+      const lipBalance = near(mouthWidth / (mouthHeight || 1e-6), 2.9, 1.4);
+      const cheekBalance = near(faceWidth / eyeSpan, 2.15, 0.5);
       const smile =
         (blend(blendshapes, "mouthSmileLeft") + blend(blendshapes, "mouthSmileRight")) / 2;
       const openJaw = blend(blendshapes, "jawOpen");
-      const expression = clamp(smile * 0.85 - openJaw * 0.35, 0, 1);
-      const harmony = clamp(lipBalance * 0.35 + cheekBalance * 0.35 + expression * 0.3, 0, 1);
+      // Neutral faces keep a solid harmony baseline — don't require a grin.
+      const expression = clamp(0.62 + smile * 0.28 - openJaw * 0.4, 0, 1);
+      const harmony = clamp(lipBalance * 0.28 + cheekBalance * 0.42 + expression * 0.3, 0, 1);
 
-      const composite = symmetry * 0.38 + proportion * 0.37 + harmony * 0.25;
-      // Map landmarks onto PSL 1–8; asymptote under true Adam (8).
-      let score = 1 + Math.pow(composite, 0.92) * 6.75;
-      score += ((noseTip.x * 17 + noseTip.y * 31) % 1) * 0.28 - 0.14;
+      const composite = symmetry * 0.3 + proportion * 0.42 + harmony * 0.28;
+      // Map onto PSL 1–8; strong structure (jaw/canthal/thirds) lands high Chad lite, never true Adam.
+      let score = 1.2 + Math.pow(composite, 0.74) * 6.7;
+      // Small structure kicker for square-jaw / positive-tilt faces after face-zoom.
+      score += jawScore * 0.12 + canthalScore * 0.08;
       score = clamp(score, 1, PSL_MAX);
 
       const tierInfo = pslTierFromScore(score);
@@ -3906,9 +3940,66 @@
       ctx.stroke();
     }
 
-    function drawFrame(landmarks, frameW, frameH) {
-      resizeCanvas(frameW, frameH);
+    function updateFaceZoomFromLandmarks(landmarks) {
+      if (!landmarks || !landmarks.length) return;
+      let minX = 1;
+      let maxX = 0;
+      let minY = 1;
+      let maxY = 0;
+      for (let i = 0; i < landmarks.length; i++) {
+        const p = landmarks[i];
+        if (!p) continue;
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+      }
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2 - 0.02;
+      const faceSpan = Math.max(maxX - minX, (maxY - minY) * 0.92);
+      // Tighter crop → higher zoom → less wide-angle nose/edge distortion.
+      const targetScale = clamp(0.72 / Math.max(faceSpan, 0.28), 1.2, 1.85);
+      const a = 0.18;
+      faceZoom.cx = lerp(faceZoom.cx, cx, a);
+      faceZoom.cy = lerp(faceZoom.cy, cy, a);
+      faceZoom.scale = lerp(faceZoom.scale, targetScale, a);
+    }
+
+    /** Face-centered crop for front camera — unmirrored, zoomed to cut selfie distortion. */
+    function renderZoomedFrame(source, landmarks, opts) {
+      const options = opts || {};
+      const vw = source.videoWidth || source.naturalWidth || source.width;
+      const vh = source.videoHeight || source.naturalHeight || source.height;
+      if (!vw || !vh) return null;
+      if (landmarks) updateFaceZoomFromLandmarks(landmarks);
+
+      const useZoom = options.forceZoom || facingMode === "user";
+      const scale = useZoom ? faceZoom.scale : 1;
+      const crop = Math.min(vw, vh) / scale;
+      let sx = faceZoom.cx * vw - crop / 2;
+      let sy = faceZoom.cy * vh - crop / 2;
+      sx = clamp(sx, 0, Math.max(0, vw - crop));
+      sy = clamp(sy, 0, Math.max(0, vh - crop));
+
+      const out = 720;
+      zoomCanvas.width = out;
+      zoomCanvas.height = out;
+      zoomCtx.save();
+      zoomCtx.clearRect(0, 0, out, out);
+      // Natural orientation (no mirror) — matches how others see you.
+      zoomCtx.drawImage(source, sx, sy, crop, crop, 0, 0, out, out);
+      zoomCtx.restore();
+      return zoomCanvas;
+    }
+
+    function drawFrame(landmarks, frameW, frameH, sourceFrame) {
+      const w = frameW || (sourceFrame && sourceFrame.width) || 720;
+      const h = frameH || (sourceFrame && sourceFrame.height) || 720;
+      resizeCanvas(w, h);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (sourceFrame) {
+        ctx.drawImage(sourceFrame, 0, 0, canvas.width, canvas.height);
+      }
       if (!userSettings.showMesh || !landmarks || !landmarks.length) return;
       drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_TESSELATION, "rgba(94, 240, 168, 0.2)", 0.6);
       drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_FACE_OVAL, "rgba(94, 240, 168, 0.9)", 1.6);
@@ -3978,6 +4069,16 @@
         throw new Error("This browser cannot access the camera.");
       }
       const attempts = [
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            // Prefer longer focal length when the device exposes zoom (cuts selfie distortion).
+            advanced: [{ zoom: 1.6 }]
+          }
+        },
         { audio: false, video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } } },
         { audio: false, video: { facingMode } },
         { audio: false, video: true }
@@ -4005,17 +4106,20 @@
       }
       video.hidden = false;
       demoImg.hidden = true;
-      video.style.opacity = "0.92";
+      video.style.opacity = "0";
       video.srcObject = stream;
       video.setAttribute("playsinline", "");
       video.setAttribute("webkit-playsinline", "");
       await video.play();
+      lastLandmarks = null;
+      faceZoom = { cx: 0.5, cy: 0.42, scale: facingMode === "user" ? 1.4 : 1.1 };
+      canvas.style.transform = "none";
       gate.hidden = true;
       flipBtn.disabled = false;
       lockScoreBtn.disabled = true;
       setStatus(
         accountSession
-          ? "Face the camera — when your PSL settles, tap Lock PSL."
+          ? "Face the camera — face zoom reduces selfie distortion. Lock when PSL settles."
           : "Face the camera — sign up or log in to reveal and lock your PSL."
       );
     }
@@ -4025,21 +4129,36 @@
       if (view !== "scan" || mode !== "live" || !faceLandmarker || video.readyState < 2) return;
       if (video.currentTime === lastVideoTime) return;
       lastVideoTime = video.currentTime;
-      const result = faceLandmarker.detectForVideo(video, performance.now());
+
+      // Unmirrored face-centered crop — tighter FOV cuts front-camera barrel distortion.
+      const zoomed = renderZoomedFrame(video, lastLandmarks);
+      if (!zoomed) return;
+      const result = faceLandmarker.detectForVideo(zoomed, performance.now());
       const faces = result.faceLandmarks || [];
       if (!faces.length) {
-        drawFrame(null);
+        faceZoom.scale = lerp(faceZoom.scale, 1.2, 0.2);
+        faceZoom.cx = lerp(faceZoom.cx, 0.5, 0.12);
+        faceZoom.cy = lerp(faceZoom.cy, 0.42, 0.12);
+        const wide = renderZoomedFrame(video, null);
+        if (wide) drawFrame(null, wide.width, wide.height, wide);
+        lastLandmarks = null;
         if (!holdScore) {
           scorePanel.hidden = true;
           setStatus("No face in frame — center yourself.");
         }
         return;
       }
-      drawFrame(faces[0], video.videoWidth, video.videoHeight);
+      lastLandmarks = faces[0];
+      updateFaceZoomFromLandmarks(faces[0]);
+      drawFrame(faces[0], zoomed.width, zoomed.height, zoomed);
       const rated = rateFace(faces[0], result.faceBlendshapes);
       if (!holdScore) held = { ...rated };
       showScore(rated);
-      setStatus("Tracking 478 face landmarks · MediaPipe Face Landmarker");
+      setStatus(
+        facingMode === "user"
+          ? "Face zoom on · unmirrored front camera · MediaPipe"
+          : "Tracking 478 face landmarks · MediaPipe Face Landmarker"
+      );
     }
 
     async function runDemo() {
@@ -4057,18 +4176,26 @@
           });
         }
         video.hidden = true;
-        demoImg.hidden = false;
+        demoImg.hidden = true;
         canvas.style.transform = "none";
-        const result = faceLandmarker.detect(demoImg);
-        const faces = result.faceLandmarks || [];
+        faceZoom = { cx: 0.5, cy: 0.42, scale: 1.45 };
+        let result = faceLandmarker.detect(demoImg);
+        let faces = result.faceLandmarks || [];
         gate.hidden = true;
         flipBtn.disabled = true;
         if (!faces.length) {
           setStatus("Sample loaded, but no face was found.", "warn");
+          demoImg.hidden = false;
           return;
         }
+        // Face-zoom the still too — same distortion correction as live front cam.
+        const framed = renderZoomedFrame(demoImg, faces[0], { forceZoom: true });
+        if (framed) {
+          result = faceLandmarker.detect(framed);
+          faces = result.faceLandmarks || faces;
+        }
         try {
-          drawFrame(faces[0], demoImg.naturalWidth, demoImg.naturalHeight);
+          drawFrame(faces[0], framed.width, framed.height, framed);
         } catch (drawErr) {
           console.warn("Mesh draw skipped", drawErr);
         }
@@ -4099,9 +4226,10 @@
       startBtn.disabled = true;
       demoBtn.disabled = true;
       mode = "live";
-      canvas.style.transform = "scaleX(-1)";
+      canvas.style.transform = "none";
       demoImg.hidden = true;
       video.hidden = false;
+      lastLandmarks = null;
       try {
         await ensureLandmarker("VIDEO");
         await startCamera();
